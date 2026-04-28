@@ -256,6 +256,25 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
 .sched-table th{padding:7px 8px;background:var(--bg2);border:1px solid var(--bd);text-align:left;font-weight:700;color:var(--t2)}
 .sched-table td{padding:7px 8px;border:1px solid var(--bd);vertical-align:middle}
 
+/* Chat */
+.chat-wrap{display:flex;flex-direction:column;height:100%;min-height:0}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-bubble{max-width:85%;padding:10px 14px;border-radius:12px;font-size:11px;line-height:1.7;white-space:pre-wrap}
+.chat-bubble.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.chat-bubble.assistant{background:var(--bg2);color:var(--t1);align-self:flex-start;border-bottom-left-radius:3px;border:1px solid var(--bd)}
+.chat-bubble.loading{background:var(--bg2);border:1px solid var(--bd);align-self:flex-start}
+.chat-footer{padding:12px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px}
+.chat-img-preview{position:relative;display:inline-block}
+.chat-img-preview img{max-height:80px;border-radius:6px;border:1px solid var(--bd)}
+.chat-img-preview .remove-img{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end}
+/* Screenshot zone */
+.ss-zone{border:2px dashed var(--bd2);border-radius:var(--rl);padding:14px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card);margin-bottom:4px}
+.ss-zone:hover,.ss-zone.active{border-color:var(--accent);background:var(--bi)}
+.ss-zone-label{font-size:11px;color:var(--t3);font-weight:500}
+.ss-zone-hint{font-size:9px;color:var(--t3);margin-top:3px}
+.ss-preview{margin-top:10px}
+.ss-preview img{max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--bd)}
 /* Responsive */
 @media(max-width:900px){
   #sidebar{width:180px;min-width:180px}
@@ -292,9 +311,12 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
     <svg viewBox="0 0 16 16"><polyline points="2,12 5,7 8,9 11,4 14,6"/></svg>Agent KPIs
   </div>
   <div class="sb-section" style="margin-top:6px">Management</div>
+  <div class="sb-item" onclick="nav('chat',this)">
+    <svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z"/></svg>AI Chat
+    <span class="sb-badge" style="background:var(--bi);color:var(--ti)">NEW</span>
+  </div>
   <div class="sb-item" onclick="nav('ai',this)">
     <svg viewBox="0 0 16 16"><path d="M8 2l2 3h3l-2.5 2.5L11.5 11 8 9l-3.5 2 1-3.5L3 5h3z"/></svg>AI Settings
-    <span class="sb-badge" style="background:var(--bi);color:var(--ti)">NEW</span>
   </div>
   <div class="sb-item" id="sb-admin" onclick="nav('admin',this)">
     <svg viewBox="0 0 16 16"><rect x="4" y="7" width="8" height="7" rx="1"/><path d="M6 7V5a2 2 0 014 0v2"/></svg>Admin
@@ -329,6 +351,13 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
 
   <!-- PAGE: DECISION ENGINE -->
   <div class="page active" id="p-decision">
+    <div class="ss-zone" id="ss-zone" onclick="document.getElementById('ss-file').click()">
+      <div class="ss-zone-label">📋 Paste a screenshot here (⌘V) for instant AI analysis</div>
+      <div class="ss-zone-hint">Or click to upload · Amazon, eBay, Shopify, eDesk — any order screen</div>
+      <input type="file" id="ss-file" accept="image/*" style="display:none" onchange="handleSSFile(this)">
+      <div class="ss-preview" id="ss-preview"></div>
+      <div id="ss-analysis" style="display:none;margin-top:10px;text-align:left"></div>
+    </div>
     <div class="g2" style="gap:10px">
       <div class="mode-card sel" id="mode-wizard" onclick="setMode('wizard')">
         <div class="mode-title">Guided Wizard</div>
@@ -531,28 +560,51 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
     </div>
   </div>
 
+  <!-- PAGE: AI CHAT -->
+  <div class="page" id="p-chat">
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:500px">
+      <div class="card-header">
+        <span class="card-title">AI Chat — Ask anything about a customer situation</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:9px;color:var(--t3)">Gemini Flash · Policy-aware</span>
+          <button class="btn-sm" onclick="clearChat()">Clear</button>
+        </div>
+      </div>
+      <div class="chat-wrap">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-bubble assistant">👋 Hi! I'm your AI assistant. Ask me anything about a customer situation, paste a screenshot, or describe an issue — I'll recommend the right SOP, templates, and next steps based on MSHZ policies.</div>
+        </div>
+        <div class="chat-footer">
+          <div id="chat-img-wrap" style="display:none">
+            <div class="chat-img-preview">
+              <img id="chat-img-thumb" src="">
+              <button class="remove-img" onclick="removeChatImg()">✕</button>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea id="chat-input" class="chat-textarea" placeholder="Type a question or paste a screenshot (⌘V)…" rows="2" style="flex:1;resize:none" onkeydown="chatKeydown(event)"></textarea>
+            <button class="btn-primary" onclick="sendChat()" style="height:fit-content;padding:10px 16px">Send</button>
+          </div>
+          <div style="font-size:9px;color:var(--t3)">⌘V to paste screenshot · Enter to send · Shift+Enter for new line</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- PAGE: AI SETTINGS -->
   <div class="page" id="p-ai">
     <div class="card">
-      <div class="card-header"><span class="card-title">AI Configuration</span><span class="card-subtitle">OpenAI Integration</span></div>
+      <div class="card-header"><span class="card-title">AI Configuration</span><span class="card-subtitle">OpenRouter · Gemini Flash</span></div>
       <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
-        <div class="alert-blue">AI suggestions use your company policies as context. The AI reads your policy text and SOPs to provide tailored recommendations alongside the hard-coded decision engine results.</div>
-        <div class="field">
-          <div class="field-label">OpenAI API Key</div>
-          <div style="display:flex;gap:8px">
-            <input type="password" id="ai-api-key" placeholder="sk-..." value="">
-            <button class="btn-primary btn-sm" onclick="saveAIKey()" style="white-space:nowrap">Save Key</button>
-            <button class="btn-sm" onclick="testAIKey()" style="white-space:nowrap">Test</button>
-          </div>
-          <div style="font-size:9px;color:var(--t3);margin-top:2px">Your key is stored in the data file. Share the file to share the key.</div>
-        </div>
+        <div class="alert-green">✓ AI is active. Running on Gemini Flash via OpenRouter. The API key is stored securely on the server — agents never see it.</div>
         <div id="ai-key-status" style="font-size:10px;min-height:16px"></div>
+        <input type="hidden" id="ai-api-key" value="">
         <div class="field">
           <div class="field-label">AI Model</div>
           <select id="ai-model">
-            <option value="gpt-4o-mini">GPT-4o Mini (fast, cheap)</option>
-            <option value="gpt-4o">GPT-4o (best quality)</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            <option value="google/gemini-2.0-flash-001" selected>Gemini Flash 2.0 (active)</option>
+            <option value="google/gemini-flash-1.5">Gemini Flash 1.5</option>
+            <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
           </select>
         </div>
         <div class="field">
@@ -708,7 +760,7 @@ function nav(id, el) {
   if (!pg) return;
   pg.classList.add('active');
   if (el && el.classList) el.classList.add('active');
-  var T = { decision:'Decision Engine', policy:'Policy Dashboard', templates:'Template Library', shifts:'Shift Schedule', kpi:'Agent KPI Dashboard', ai:'AI Settings', admin:'Admin Panel' };
+  var T = { decision:'Decision Engine', policy:'Policy Dashboard', templates:'Template Library', shifts:'Shift Schedule', kpi:'Agent KPI Dashboard', chat:'AI Chat', ai:'AI Settings', admin:'Admin Panel' };
   document.getElementById('topbar-title').textContent = T[id] || id;
 }
 
@@ -1242,14 +1294,8 @@ function loadAISettings(){
   }
 }
 
-function getAISuggestion(key, resolution){
-  var apiKey = (DATA_STORE.ai_settings && DATA_STORE.ai_settings.key) ? DATA_STORE.ai_settings.key : '';
+async function getAISuggestion(key, resolution){
   var el=document.getElementById('ai-suggestion-content');
-  if(!apiKey){
-    el.innerHTML='<div style="font-size:11px;color:var(--t3)">No OpenAI API key configured. Go to <strong>AI Settings</strong> to add your key and enable AI suggestions.</div>';
-    return;
-  }
-  var model = (DATA_STORE.ai_settings && DATA_STORE.ai_settings.model) ? DATA_STORE.ai_settings.model : 'gpt-4o-mini';
   var systemPrompt=document.getElementById('ai-system-prompt').value || 'You are a customer service advisor for MSHZ International.';
   var policyContext=document.getElementById('ai-policy-context').value || '';
 
@@ -1261,28 +1307,26 @@ function getAISuggestion(key, resolution){
   resolution.steps.forEach(function(s,i){userMsg+=(i+1)+'. '+s+'\n';});
   userMsg+='\nTemplates to use: '+resolution.templates.join(', ')+'\n';
   userMsg+='Escalate if: '+resolution.escalate+'\n\n';
-  userMsg+='Based on the above situation and our company policies, provide your AI recommendation. Include any additional considerations, edge cases to watch for, or tips the agent should keep in mind. Keep it concise and actionable.';
+  userMsg+='Provide your AI recommendation. Include additional considerations, edge cases, and tips. Be concise and actionable.';
 
   var messages=[
     {role:'system',content:systemPrompt+'\n\nCOMPANY POLICY REFERENCE:\n'+policyContext},
     {role:'user',content:userMsg}
   ];
 
-  fetch('https://api.openai.com/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-    body:JSON.stringify({model:model,max_tokens:600,temperature:0.3,messages:messages})
-  }).then(function(r){return r.json();}).then(function(d){
+  try {
+    var r = await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages,max_tokens:600})});
+    var d = await r.json();
     if(d.error){
-      el.innerHTML='<div style="font-size:11px;color:var(--te)">AI Error: '+d.error.message+'</div>';
+      el.innerHTML='<div style="font-size:11px;color:var(--te)">AI Error: '+d.error+'</div>';
     } else if(d.choices && d.choices[0]){
       el.innerHTML='<div class="ai-suggestion">'+d.choices[0].message.content.replace(/\n/g,'<br>')+'</div>';
     } else {
-      el.innerHTML='<div style="font-size:11px;color:var(--t3)">No AI response received.</div>';
+      el.innerHTML='<div style="font-size:11px;color:var(--t3)">No response received.</div>';
     }
-  }).catch(function(e){
+  } catch(e){
     el.innerHTML='<div style="font-size:11px;color:var(--te)">Network error: '+e.message+'</div>';
-  });
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1610,6 +1654,201 @@ function logTicketResolution(marketplace, inquiryType, sopKey, resolution) {
   DATA_STORE.ticket_log = ticketLog;
   scheduleSave();
   return entry;
+}
+
+// ═══════════════════════════════════════════════════
+// SCREENSHOT ANALYSIS
+// ═══════════════════════════════════════════════════
+var currentScreenshot = null;
+
+document.addEventListener('paste', function(e) {
+  var items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      var blob = items[i].getAsFile();
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        // Route to decision screenshot or chat depending on active page
+        if (document.getElementById('p-decision').classList.contains('active')) {
+          loadSSImage(ev.target.result);
+        } else if (document.getElementById('p-chat').classList.contains('active')) {
+          loadChatImage(ev.target.result);
+        }
+      };
+      reader.readAsDataURL(blob);
+      e.preventDefault();
+      return;
+    }
+  }
+});
+
+function handleSSFile(input) {
+  if (!input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) { loadSSImage(e.target.result); };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function loadSSImage(src) {
+  currentScreenshot = src;
+  var zone = document.getElementById('ss-zone');
+  zone.classList.add('active');
+  document.getElementById('ss-preview').innerHTML =
+    '<img src="'+src+'" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--bd)">' +
+    '<div style="display:flex;gap:8px;margin-top:8px;justify-content:center">' +
+    '<button class="btn-primary btn-sm" onclick="analyzeScreenshot(event)">✦ Analyze with AI</button>' +
+    '<button class="btn-sm" onclick="clearScreenshot(event)">Clear</button></div>';
+  document.getElementById('ss-analysis').style.display = 'none';
+}
+
+function clearScreenshot(e) {
+  if (e) e.stopPropagation();
+  currentScreenshot = null;
+  document.getElementById('ss-preview').innerHTML = '';
+  document.getElementById('ss-analysis').style.display = 'none';
+  document.getElementById('ss-zone').classList.remove('active');
+  document.getElementById('ss-file').value = '';
+}
+
+async function analyzeScreenshot(e) {
+  if (e) e.stopPropagation();
+  if (!currentScreenshot) return;
+  var analysisEl = document.getElementById('ss-analysis');
+  analysisEl.style.display = 'block';
+  analysisEl.innerHTML = '<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:6px">Analyzing screenshot...</span></div>';
+
+  var systemPrompt = document.getElementById('ai-system-prompt').value;
+  var policyContext = document.getElementById('ai-policy-context').value;
+
+  var messages = [
+    { role: 'system', content: systemPrompt + '\n\nCOMPANY POLICY:\n' + policyContext },
+    { role: 'user', content: [
+      { type: 'text', text: 'I am a CS agent. Analyze this screenshot, identify the customer issue, and give me:\n1. What the issue is\n2. Which SOP applies\n3. Exact steps to take\n4. Which template code to use\n5. Any escalation triggers to watch for\n\nBe specific and concise.' },
+      { type: 'image_url', image_url: { url: currentScreenshot } }
+    ]}
+  ];
+
+  try {
+    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800 }) });
+    var d = await r.json();
+    if (d.error) {
+      analysisEl.innerHTML = '<div class="alert-red">Error: ' + d.error + '</div>';
+    } else if (d.choices && d.choices[0]) {
+      analysisEl.innerHTML = '<div class="ai-box"><div class="ai-badge">✦ Screenshot Analysis</div><div class="ai-suggestion">' + d.choices[0].message.content.replace(/\n/g,'<br>') + '</div></div>';
+    }
+  } catch(err) {
+    analysisEl.innerHTML = '<div class="alert-red">Network error: ' + err.message + '</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// AI CHAT
+// ═══════════════════════════════════════════════════
+var CHAT_HISTORY = [];
+var chatImageData = null;
+
+function clearChat() {
+  CHAT_HISTORY = [];
+  chatImageData = null;
+  document.getElementById('chat-messages').innerHTML = '<div class="chat-bubble assistant">👋 Hi! Ask me anything about a customer situation, paste a screenshot, or describe an issue — I\'ll recommend the right SOP, templates, and next steps.</div>';
+  document.getElementById('chat-img-wrap').style.display = 'none';
+  document.getElementById('chat-img-thumb').src = '';
+}
+
+function loadChatImage(src) {
+  chatImageData = src;
+  document.getElementById('chat-img-thumb').src = src;
+  document.getElementById('chat-img-wrap').style.display = 'block';
+}
+
+function removeChatImg() {
+  chatImageData = null;
+  document.getElementById('chat-img-wrap').style.display = 'none';
+  document.getElementById('chat-img-thumb').src = '';
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+// Paste image directly into chat input area
+document.addEventListener('DOMContentLoaded', function() {
+  var chatInput = document.getElementById('chat-input');
+  if (chatInput) {
+    chatInput.addEventListener('paste', function(e) {
+      var items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          var blob = items[i].getAsFile();
+          var reader = new FileReader();
+          reader.onload = function(ev) { loadChatImage(ev.target.result); };
+          reader.readAsDataURL(blob);
+          e.preventDefault();
+          return;
+        }
+      }
+    });
+  }
+});
+
+function appendBubble(role, html) {
+  var wrap = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'chat-bubble ' + role;
+  div.innerHTML = html;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+
+async function sendChat() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if (!msg && !chatImageData) return;
+  input.value = '';
+
+  var userContent;
+  var displayMsg = msg || '📷 Screenshot attached';
+  if (chatImageData) {
+    userContent = [
+      { type: 'text', text: msg || 'Please analyze this screenshot and advise.' },
+      { type: 'image_url', image_url: { url: chatImageData } }
+    ];
+    appendBubble('user', esc(displayMsg) + '<br><img src="'+chatImageData+'" style="max-width:180px;border-radius:6px;margin-top:6px">');
+  } else {
+    userContent = msg;
+    appendBubble('user', esc(msg).replace(/\n/g,'<br>'));
+  }
+
+  removeChatImg();
+  CHAT_HISTORY.push({ role: 'user', content: userContent });
+
+  var loadingBubble = appendBubble('loading', '<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
+
+  var systemPrompt = document.getElementById('ai-system-prompt').value;
+  var policyContext = document.getElementById('ai-policy-context').value;
+
+  var messages = [
+    { role: 'system', content: systemPrompt + '\n\nCOMPANY POLICY:\n' + policyContext }
+  ].concat(CHAT_HISTORY);
+
+  try {
+    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800 }) });
+    var d = await r.json();
+    loadingBubble.remove();
+    if (d.error) {
+      appendBubble('assistant', '⚠ Error: ' + esc(d.error));
+    } else if (d.choices && d.choices[0]) {
+      var reply = d.choices[0].message.content;
+      CHAT_HISTORY.push({ role: 'assistant', content: reply });
+      appendBubble('assistant', reply.replace(/\n/g,'<br>'));
+    }
+  } catch(err) {
+    loadingBubble.remove();
+    appendBubble('assistant', '⚠ Network error: ' + esc(err.message));
+  }
 }
 
 // ═══════════════════════════════════════════════════
