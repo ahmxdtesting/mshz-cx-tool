@@ -1310,7 +1310,7 @@ async function getAISuggestion(key, resolution){
   userMsg+='Provide your AI recommendation. Include additional considerations, edge cases, and tips. Be concise and actionable.';
 
   var messages=[
-    {role:'system',content:systemPrompt+'\n\nCOMPANY POLICY REFERENCE:\n'+policyContext},
+    {role:'system',content:systemPrompt+'\n\n'+buildAIContext(wInq)},
     {role:'user',content:userMsg}
   ];
 
@@ -1657,6 +1657,90 @@ function logTicketResolution(marketplace, inquiryType, sopKey, resolution) {
 }
 
 // ═══════════════════════════════════════════════════
+// DYNAMIC POLICY CONTEXT BUILDER
+// Searches live SOPs, templates, policies for relevant
+// content based on the query instead of sending a
+// static generic blob every time.
+// ═══════════════════════════════════════════════════
+function buildAIContext(query) {
+  var q = (query || '').toLowerCase();
+  var ctx = 'MSHZ INTERNATIONAL — RELEVANT POLICY REFERENCE\n\n';
+
+  // --- SOPs: include all, highlight matches ---
+  ctx += '=== STANDARD OPERATING PROCEDURES ===\n';
+  var sops = ADMIN_DATA.sops || [];
+  sops.forEach(function(s) {
+    ctx += '\n' + s.id + ': ' + s.title + '\n';
+    ctx += 'Trigger: ' + s.trigger + '\n';
+    ctx += 'Steps:\n' + s.steps + '\n';
+    ctx += 'Templates to use: ' + s.templates + '\n';
+    ctx += 'Escalate if: ' + s.escalate + '\n';
+  });
+
+  // --- Decision Engine resolutions ---
+  ctx += '\n=== DECISION ENGINE RESOLUTIONS ===\n';
+  Object.keys(RES).forEach(function(k) {
+    var r = RES[k];
+    ctx += '\n[' + k + '] ' + r.title + '\n';
+    ctx += 'Steps: ' + r.steps.join(' | ') + '\n';
+    ctx += 'Templates: ' + r.templates.join(', ') + '\n';
+    ctx += 'Escalate if: ' + r.escalate + '\n';
+  });
+
+  // --- Templates: match relevant ones ---
+  ctx += '\n=== RESPONSE TEMPLATES ===\n';
+  var matched = TMPLS.filter(function(t) {
+    if (!q) return true;
+    return t.name.toLowerCase().includes(q) ||
+           t.when.toLowerCase().includes(q) ||
+           t.code.toLowerCase().includes(q) ||
+           t.body.toLowerCase().includes(q);
+  });
+  // Always include all templates if query is short or generic
+  var tmplList = (matched.length >= 3 && q.length > 4) ? matched : TMPLS;
+  tmplList.forEach(function(t) {
+    ctx += '\n' + t.code + ' — ' + t.name + '\n';
+    ctx += 'Use when: ' + t.when + '\n';
+    ctx += 'Do NOT use if: ' + t.donot + '\n';
+    ctx += 'Variables needed: ' + t.vars.join(', ') + '\n';
+  });
+
+  // --- Refund rules ---
+  ctx += '\n=== REFUND RULES ===\n';
+  ctx += 'R-1: Return request response within 48 HOURS. A-Z without 48h = Amazon auto-grants.\n';
+  ctx += 'R-2: Message response within 24h, 7 days/week including weekends.\n';
+  ctx += 'R-3: Wrong/damaged by MSHZ = full refund, zero deductions.\n';
+  ctx += 'R-4: Customer-fault return = deduct return shipping from refund.\n';
+  ctx += 'R-5: Issue refund after return received unless returnless.\n';
+  ctx += 'R-6: Returnless refund = issue immediately, customer keeps item.\n';
+  ctx += 'R-7: Do NOT resend a completely different item.\n';
+  ctx += 'R-8: Refund within 2 business days of receiving return.\n';
+
+  // --- Escalation rules ---
+  ctx += '\n=== ESCALATION RULES ===\n';
+  ctx += 'Listing inaccuracy: resolve customer first, submit listing report same day.\n';
+  ctx += 'Refund > $40: escalate before processing.\n';
+  ctx += 'FBA wrong item: STOP, escalate IMMEDIATELY before acting.\n';
+  ctx += 'A-Z claim filed: notify supervisor within 1 hour, respond within 48h.\n';
+  ctx += 'Technical/Xtenzi: assign to Harleen, never answer independently.\n';
+
+  // --- Carriers ---
+  ctx += '\n=== CARRIER CONTACTS ===\n';
+  var carriers = ADMIN_DATA.carriers || [];
+  carriers.forEach(function(c) {
+    ctx += c.name + ' (' + c.region + '): ' + c.contact + ' — min wait: ' + c.minWait + '\n';
+  });
+
+  // --- KPI targets ---
+  ctx += '\n=== KPI TARGETS (account health) ===\n';
+  ctx += 'ODR: below 1% (target 0.5%). Response rate: above 95% within 24h.\n';
+  ctx += 'Return request response: 100% within 48h — zero exceptions.\n';
+  ctx += 'Buyer contact rate target: below 1.63%. Dissatisfaction: below 6.47%.\n';
+
+  return ctx;
+}
+
+// ═══════════════════════════════════════════════════
 // SCREENSHOT ANALYSIS
 // ═══════════════════════════════════════════════════
 var currentScreenshot = null;
@@ -1722,9 +1806,9 @@ async function analyzeScreenshot(e) {
   var policyContext = document.getElementById('ai-policy-context').value;
 
   var messages = [
-    { role: 'system', content: systemPrompt + '\n\nCOMPANY POLICY:\n' + policyContext },
+    { role: 'system', content: systemPrompt + '\n\n' + buildAIContext('') },
     { role: 'user', content: [
-      { type: 'text', text: 'I am a CS agent. Analyze this screenshot, identify the customer issue, and give me:\n1. What the issue is\n2. Which SOP applies\n3. Exact steps to take\n4. Which template code to use\n5. Any escalation triggers to watch for\n\nBe specific and concise.' },
+      { type: 'text', text: 'I am a CS agent. Analyze this screenshot, identify the customer issue, and give me:\n1. What the issue is\n2. Which SOP applies (cite the SOP ID)\n3. Exact steps to take\n4. Which template code to use\n5. Any escalation triggers to watch for\n\nBe specific. Reference exact SOP IDs and template codes.' },
       { type: 'image_url', image_url: { url: currentScreenshot } }
     ]}
   ];
@@ -1828,10 +1912,9 @@ async function sendChat() {
   var loadingBubble = appendBubble('loading', '<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
 
   var systemPrompt = document.getElementById('ai-system-prompt').value;
-  var policyContext = document.getElementById('ai-policy-context').value;
 
   var messages = [
-    { role: 'system', content: systemPrompt + '\n\nCOMPANY POLICY:\n' + policyContext }
+    { role: 'system', content: systemPrompt + '\n\n' + buildAIContext(msg) }
   ].concat(CHAT_HISTORY);
 
   try {
