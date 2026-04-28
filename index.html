@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSHZ CX Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafaf8;--bg2:#f3f2ef;--bg3:#eae9e5;
+  --card:#ffffff;--card-hover:#fdfdfb;
+  --bi:#e8f0fe;--bo:#e6f4ea;--bw:#fef7e0;--be:#fce8e6;
+  --t1:#1a1a18;--t2:#5f6368;--t3:#9aa0a6;
+  --ti:#1a73e8;--to:#1e8e3e;--tw:#e37400;--te:#d93025;
+  --bd:rgba(0,0,0,.08);--bd2:rgba(0,0,0,.14);
+  --blue:#1a73e8;--green:#1e8e3e;--amber:#f9ab00;--red:#d93025;--navy:#1f2937;
+  --accent:#1a73e8;
+  --r:10px;--rl:14px;--rxl:20px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px rgba(0,0,0,.05), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 25px rgba(0,0,0,.06), 0 4px 10px rgba(0,0,0,.04);
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--t1);
+}
+html,body{height:100%;overflow:hidden}
+
+/* Layout */
+#app{display:flex;height:100vh;background:var(--bg)}
+#sidebar{width:220px;min-width:220px;background:var(--card);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+#topbar{height:52px;min-height:52px;background:var(--card);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:10px;box-shadow:var(--shadow-sm)}
+#content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+
+/* Sidebar */
+.sb-brand{padding:18px 18px 14px;border-bottom:1px solid var(--bd)}
+.sb-name{font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-.3px}
+.sb-sub{font-size:10px;color:var(--t3);margin-top:3px;font-weight:500}
+.sb-section{font-size:9px;font-weight:700;color:var(--t3);padding:14px 18px 6px;text-transform:uppercase;letter-spacing:.1em}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:12px;color:var(--t2);cursor:pointer;border-left:3px solid transparent;transition:all .15s;font-weight:500}
+.sb-item:hover{background:var(--bg);color:var(--t1)}
+.sb-item.active{background:var(--bi);color:var(--ti);border-left-color:var(--accent);font-weight:600}
+.sb-item svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.sb-badge{margin-left:auto;font-size:8px;padding:2px 7px;border-radius:8px;font-weight:700}
+
+#topbar-title{font-size:14px;font-weight:700;color:var(--t1);flex:1;letter-spacing:-.2px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--rl);box-shadow:var(--shadow-sm);overflow:hidden}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:700;color:var(--t1)}
+.card-subtitle{font-size:10px;color:var(--t3);font-weight:500}
+.card-body{padding:16px}
+
+/* Pages */
+.page{display:none;flex-direction:column;gap:16px}
+.page.active{display:flex}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* KPI tiles */
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:var(--rl);padding:14px 16px;box-shadow:var(--shadow-sm)}
+.kpi-label{font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.kpi-value{font-size:24px;font-weight:700;color:var(--t1);line-height:1.1}
+.kpi-sub{font-size:10px;margin-top:4px;font-weight:500}
+.kpi-good{color:var(--green)}.kpi-warn{color:var(--amber)}.kpi-alert{color:var(--red)}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;line-height:1.4}
+.pill-blue{background:var(--bi);color:var(--ti)}.pill-green{background:var(--bo);color:var(--to)}
+.pill-red{background:var(--be);color:var(--te)}.pill-amber{background:var(--bw);color:var(--tw)}
+.pill-gray{background:var(--bg3);color:var(--t2)}.pill-navy{background:var(--navy);color:#fff}
+
+/* Buttons */
+button{font-family:inherit;font-size:11px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--card);color:var(--t1);cursor:pointer;transition:all .15s;font-weight:500}
+button:hover{background:var(--bg2);border-color:var(--bd2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#1557b0;border-color:#1557b0}
+.btn-sm{padding:5px 10px;font-size:10px}
+.btn-danger{background:var(--be);color:var(--te);border-color:#f5c6cb}
+.btn-danger:hover{background:#fce0de}
+
+/* Inputs */
+input,select,textarea{font-family:inherit;font-size:12px;padding:8px 12px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--card);color:var(--t1);width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,115,232,.1)}
+textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6}
+.field{display:flex;flex-direction:column;gap:4px}
+.field-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+
+/* Chips */
+.chip{font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid var(--bd2);background:var(--card);color:var(--t2);cursor:pointer;display:inline-block;font-weight:500;transition:all .15s}
+.chip:hover{background:var(--bg2)}
+.chip.on{background:var(--bi);color:var(--ti);border-color:#a8c7fa;font-weight:600}
+
+/* Decision Engine */
+.mode-card{padding:14px;border-radius:var(--rl);border:1px solid var(--bd2);cursor:pointer;background:var(--card);text-align:center;transition:all .15s;box-shadow:var(--shadow-sm)}
+.mode-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md)}
+.mode-card.sel{background:var(--bi);border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,115,232,.12)}
+.mode-title{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.mode-desc{font-size:10px;color:var(--t2)}
+
+/* Wizard */
+.progress-bar{height:4px;background:var(--bg3);border-radius:3px;margin-bottom:12px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#4285f4);border-radius:3px;transition:width .4s ease}
+.wizard-q{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:14px}
+.wizard-opt{padding:12px 16px;border-radius:var(--r);border:1px solid var(--bd2);cursor:pointer;font-size:12px;color:var(--t1);background:var(--card);text-align:left;width:100%;transition:all .15s;font-weight:500;margin-bottom:6px;display:block}
+.wizard-opt:hover{background:var(--bi);border-color:#a8c7fa;color:var(--ti)}
+.wizard-opt.sel{background:var(--bi);border-color:var(--accent);color:var(--ti);font-weight:600}
+
+/* Resolution boxes */
+.res-green{background:var(--bo);border:1px solid #a8dab5;border-radius:var(--rl);padding:16px}
+.res-amber{background:var(--bw);border:1px solid #fdd663;border-radius:var(--rl);padding:16px;margin-top:8px}
+.res-blue{background:var(--bi);border:1px solid #a8c7fa;border-radius:var(--rl);padding:16px;margin-top:8px}
+.res-title{font-size:12px;font-weight:700;margin-bottom:8px}
+.res-green .res-title{color:var(--to)}.res-amber .res-title{color:var(--tw)}.res-blue .res-title{color:var(--ti)}
+.step-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px}
+.step-num{width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-num-blue{background:var(--bi);color:var(--ti)}.step-num-amber{background:var(--bw);color:var(--tw)}
+.step-text{font-size:11px;line-height:1.6;color:var(--t1)}
+
+/* Template tag */
+.tmpl-tag{display:inline-flex;background:var(--bi);color:var(--ti);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;cursor:pointer;margin:2px;border:none;transition:all .15s}
+.tmpl-tag:hover{background:#d2e3fc}
+
+/* Search result items */
+.search-item{padding:12px 14px;border-radius:var(--r);border:1px solid var(--bd2);cursor:pointer;background:var(--card);margin-bottom:6px;transition:all .15s}
+.search-item:hover{background:var(--bi);border-color:#a8c7fa}
+.search-item-title{font-size:11px;font-weight:700;color:var(--t1)}
+.search-item-desc{font-size:10px;color:var(--t2);margin-top:3px}
+
+/* Policy panel */
+.pol-layout{display:grid;grid-template-columns:230px 1fr;min-height:560px}
+.pol-sidebar{border-right:1px solid var(--bd);overflow-y:auto}
+.pol-item{padding:11px 14px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .1s}
+.pol-item:hover{background:var(--bg)}
+.pol-item.sel{background:var(--bi)}
+.pol-item-title{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.pol-item-sub{font-size:9px;color:var(--t2)}
+.pol-content{padding:16px;overflow-y:auto}
+.pol-section{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding-bottom:6px;border-bottom:1px solid var(--bd);margin-bottom:8px}
+
+/* Rule rows */
+.rule-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);align-items:flex-start}
+.rule-row:last-child{border-bottom:none}
+.rule-num{font-size:9px;font-weight:700;color:var(--ti);min-width:28px;flex-shrink:0;margin-top:2px;background:var(--bi);border-radius:4px;padding:2px 5px;text-align:center}
+.rule-text{font-size:11px;color:var(--t1);line-height:1.6;flex:1}
+.rule-note{font-size:9px;color:var(--t3);margin-top:2px}
+
+/* Alert strips */
+.alert-strip{border-radius:var(--r);padding:10px 13px;font-size:11px;line-height:1.5;margin-bottom:8px}
+.alert-red{background:var(--be);border:1px solid #f5c6cb;color:var(--te)}
+.alert-blue{background:var(--bi);border:1px solid #a8c7fa;color:var(--ti)}
+.alert-amber{background:var(--bw);border:1px solid #fdd663;color:var(--tw)}
+.alert-green{background:var(--bo);border:1px solid #a8dab5;color:var(--to)}
+
+/* Templates panel */
+.tmpl-layout{display:grid;grid-template-columns:230px 1fr;min-height:560px}
+.tmpl-sidebar{border-right:1px solid var(--bd);overflow-y:auto}
+.tmpl-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer;align-items:flex-start;transition:background .1s}
+.tmpl-item:hover{background:var(--bg)}.tmpl-item.sel{background:var(--bi)}
+.tmpl-code{font-size:11px;font-weight:700;color:var(--ti);min-width:34px;flex-shrink:0}
+.tmpl-name{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.tmpl-when{font-size:9px;color:var(--t2);line-height:1.3}
+.tmpl-content{padding:16px;overflow-y:auto}
+.tmpl-preview{background:var(--bg);border-radius:var(--r);padding:14px;font-size:11px;color:var(--t1);line-height:1.8;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;border:1px solid var(--bd)}
+.tmpl-var{display:inline-flex;background:var(--bi);color:var(--ti);font-size:9px;padding:2px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;margin:2px}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:11px}
+.data-table th{padding:6px 10px;background:var(--bg2);border:1px solid var(--bd);text-align:left;font-weight:700;color:var(--t2);font-size:10px}
+.data-table td{padding:6px 10px;border:1px solid var(--bd);color:var(--t1)}
+.data-table tr.seller-fault{background:#fff8e1}
+
+/* Shift cards */
+.shift-card{background:var(--card);border:1px solid var(--bd);border-radius:var(--rl);padding:14px;box-shadow:var(--shadow-sm)}
+.shift-row{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bd)}
+.shift-row:last-child{border-bottom:none}
+.shift-label{color:var(--t3)}.shift-val{font-weight:700;color:var(--t1)}
+.shift-bar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px}
+.shift-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),#4285f4)}
+
+/* Avatar */
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.av-kr{background:var(--bi);color:var(--ti)}.av-jc{background:var(--bo);color:var(--to)}
+
+/* KPI scorecard */
+.score-ring{width:48px;height:48px;border-radius:50%;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.score-ring.pass{border-color:var(--green)}.score-ring.fail{border-color:var(--red)}
+.score-val{font-size:14px;font-weight:700}
+.score-val.pass{color:var(--green)}.score-val.fail{color:var(--red)}
+.metric-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.metric-label{font-size:10px;color:var(--t2);flex:1}
+.metric-bar{width:90px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.metric-fill{height:100%;border-radius:3px}
+.metric-val{font-size:10px;font-weight:700;color:var(--t1);min-width:36px;text-align:right}
+
+/* Admin */
+.pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:50px 24px;min-height:300px}
+.pin-title{font-size:18px;font-weight:700;color:var(--t1)}
+.pin-subtitle{font-size:11px;color:var(--t3);text-align:center;line-height:1.5}
+.pin-input{font-size:26px;font-weight:700;letter-spacing:10px;text-align:center;width:160px;padding:12px;border-radius:var(--rl);border:2px solid var(--bd2)}
+.pin-error{font-size:11px;color:var(--te);background:var(--be);padding:6px 14px;border-radius:8px;display:none}
+
+/* Admin tabs */
+.admin-tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:14px}
+.admin-tab{padding:9px 16px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.admin-tab:hover{color:var(--t1)}
+.admin-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.admin-panel{display:none;flex-direction:column;gap:12px}
+.admin-panel.active{display:flex}
+
+/* Editor blocks */
+.editor-block{display:flex;flex-direction:column;gap:6px;padding:12px;background:var(--bg);border-radius:var(--r);margin-bottom:6px;border:1px solid var(--bd)}
+.editor-row{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:start;padding:10px;background:var(--bg);border-radius:var(--r);margin-bottom:6px;border:1px solid var(--bd)}
+
+/* Save indicator */
+.save-indicator{font-size:10px;padding:4px 10px;border-radius:7px;display:none;font-weight:600}
+.save-ok{background:var(--bo);color:var(--to);display:inline-block}
+.save-err{background:var(--be);color:var(--te);display:inline-block}
+
+/* AI section */
+.ai-box{background:linear-gradient(135deg,#f0f4ff,#e8f0fe);border:1px solid #a8c7fa;border-radius:var(--rl);padding:16px;position:relative;overflow:hidden}
+.ai-box::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(26,115,232,.08),transparent);border-radius:50%}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:var(--ti);background:rgba(26,115,232,.1);padding:3px 8px;border-radius:6px;margin-bottom:8px}
+.ai-suggestion{font-size:11px;color:var(--t1);line-height:1.7;white-space:pre-wrap}
+.ai-loading{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3)}
+.ai-loading .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse .8s infinite alternate}
+.ai-loading .dot:nth-child(2){animation-delay:.2s}.ai-loading .dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%{opacity:.3;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+
+/* Bar chart rows */
+.bar-row{display:flex;align-items:center;gap:8px;font-size:10px;margin-bottom:6px}
+.bar-label{min-width:120px;color:var(--t2)}
+.bar-bg{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.bar-val{min-width:30px;font-weight:700;text-align:right}
+
+/* Cadence */
+.cadence-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:11px}
+.cadence-item:last-child{border-bottom:none}
+
+/* Misc */
+.target-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.target-row:last-child{border-bottom:none}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+
+/* Schedule table */
+.sched-table{width:100%;border-collapse:collapse;font-size:10px}
+.sched-table th{padding:7px 8px;background:var(--bg2);border:1px solid var(--bd);text-align:left;font-weight:700;color:var(--t2)}
+.sched-table td{padding:7px 8px;border:1px solid var(--bd);vertical-align:middle}
+
+/* Responsive */
+@media(max-width:900px){
+  #sidebar{width:180px;min-width:180px}
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .g2{grid-template-columns:1fr}
+  .pol-layout,.tmpl-layout{grid-template-columns:180px 1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-name">MSHZ CX Tool</div>
+    <div class="sb-sub">Decision Engine · Policy · AI · v3</div>
+  </div>
+  <div class="sb-section">Tools</div>
+  <div class="sb-item active" onclick="nav('decision',this)">
+    <svg viewBox="0 0 16 16"><path d="M3 8h4m2 0h4M8 4v4m0 0v4"/><circle cx="8" cy="8" r="6"/></svg>Decision Engine
+  </div>
+  <div class="sb-item" onclick="nav('policy',this)">
+    <svg viewBox="0 0 16 16"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M6 6h4M6 9h3"/></svg>Policy Dashboard
+  </div>
+  <div class="sb-item" onclick="nav('templates',this)">
+    <svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 7h6M5 10h4"/></svg>Templates
+  </div>
+  <div class="sb-section">Team</div>
+  <div class="sb-item" onclick="nav('shifts',this)">
+    <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Shift Schedule
+  </div>
+  <div class="sb-item" onclick="nav('kpi',this)">
+    <svg viewBox="0 0 16 16"><polyline points="2,12 5,7 8,9 11,4 14,6"/></svg>Agent KPIs
+  </div>
+  <div class="sb-section" style="margin-top:6px">Management</div>
+  <div class="sb-item" onclick="nav('ai',this)">
+    <svg viewBox="0 0 16 16"><path d="M8 2l2 3h3l-2.5 2.5L11.5 11 8 9l-3.5 2 1-3.5L3 5h3z"/></svg>AI Settings
+    <span class="sb-badge" style="background:var(--bi);color:var(--ti)">NEW</span>
+  </div>
+  <div class="sb-item" id="sb-admin" onclick="nav('admin',this)">
+    <svg viewBox="0 0 16 16"><rect x="4" y="7" width="8" height="7" rx="1"/><path d="M6 7V5a2 2 0 014 0v2"/></svg>Admin
+    <span class="sb-badge" style="background:var(--bw);color:var(--tw)">PIN</span>
+  </div>
+  <div style="flex:1"></div>
+  <div style="padding:12px 18px;border-top:1px solid var(--bd);font-size:9px;color:var(--t3)">
+    <div style="font-weight:600">MSHZ International</div>
+    <div style="margin-top:2px">CX Decision Engine v3.0</div>
+    <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+      <div id="storage-status" style="display:flex;align-items:center;gap:4px">
+        <span id="storage-dot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0"></span>
+        <span>No data file loaded</span>
+      </div>
+      <button class="btn-sm" id="btn-connect-file" onclick="connectDataFile()" style="font-size:9px;padding:4px 8px;width:100%">📁 Connect Data File</button>
+      <button class="btn-sm" id="btn-export-file" onclick="exportDataFile()" style="font-size:9px;padding:4px 8px;width:100%;display:none">💾 Export Data File</button>
+      <button class="btn-sm" id="btn-new-file" onclick="createNewDataFile()" style="font-size:9px;padding:4px 8px;width:100%">✨ Create New Data File</button>
+    </div>
+    <div id="last-saved" style="margin-top:4px;font-size:8px;color:var(--t3)"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div id="topbar-title">Decision Engine</div>
+    <span class="pill pill-red">ODR: below 1%</span>
+    <span class="pill pill-amber">Return: 48h max</span>
+    <span class="pill pill-navy">V3</span>
+  </div>
+  <div id="content">
+
+  <!-- PAGE: DECISION ENGINE -->
+  <div class="page active" id="p-decision">
+    <div class="g2" style="gap:10px">
+      <div class="mode-card sel" id="mode-wizard" onclick="setMode('wizard')">
+        <div class="mode-title">Guided Wizard</div>
+        <div class="mode-desc">Step-by-step decision tree — ideal for new agents</div>
+      </div>
+      <div class="mode-card" id="mode-search" onclick="setMode('search')">
+        <div class="mode-title">Quick Search</div>
+        <div class="mode-desc">Keyword SOP lookup — experienced agents</div>
+      </div>
+    </div>
+    <div class="card" id="wizard-panel">
+      <div class="card-header"><span class="card-title" id="w-title">Step 1 of 3 — Select marketplace</span><button class="btn-sm" onclick="resetWizard()">Reset</button></div>
+      <div class="card-body">
+        <div class="progress-bar"><div class="progress-fill" id="w-bar" style="width:33%"></div></div>
+        <div id="w-content"></div>
+      </div>
+    </div>
+    <div class="card" id="search-panel" style="display:none">
+      <div class="card-header"><span class="card-title">Quick SOP Lookup</span></div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="sop-input" placeholder="Type: damaged, wrong item, not received, cancel, delayed, listing..." oninput="doSearch(this.value)">
+          <button class="btn-primary btn-sm" onclick="doSearch(document.getElementById('sop-input').value)">Search</button>
+        </div>
+        <div id="search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: POLICY -->
+  <div class="page" id="p-policy">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" placeholder="Search policies..." oninput="fPol(this.value)" style="max-width:280px">
+      <span class="chip on" onclick="fCat('all',this)">All</span>
+      <span class="chip" onclick="fCat('refund',this)">Returns</span>
+      <span class="chip" onclick="fCat('carrier',this)">Carriers</span>
+      <span class="chip" onclick="fCat('amazon',this)">Amazon</span>
+      <span class="chip" onclick="fCat('kpi',this)">KPIs</span>
+      <span class="chip" onclick="fCat('conduct',this)">Conduct</span>
+    </div>
+    <div class="card" style="flex:1"><div class="pol-layout"><div class="pol-sidebar" id="pol-list"></div><div class="pol-content" id="pol-detail"><div style="color:var(--t3);font-size:12px;text-align:center;margin-top:50px">Select a section to view details</div></div></div></div>
+  </div>
+
+  <!-- PAGE: TEMPLATES -->
+  <div class="page" id="p-templates">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" placeholder="Search templates..." oninput="fTmpl(this.value)" style="max-width:260px">
+      <span class="chip on" onclick="fTS('all',this)">All</span>
+      <span class="chip" onclick="fTS('a',this)">A-series</span>
+      <span class="chip" onclick="fTS('b',this)">B-series</span>
+      <span class="chip" onclick="fTS('c',this)">C-series</span>
+      <span class="chip" onclick="fTS('d',this)">D-series</span>
+      <span class="chip" onclick="fTS('t',this)">T-series</span>
+    </div>
+    <div class="card" style="flex:1"><div class="tmpl-layout"><div class="tmpl-sidebar" id="tmpl-list"></div><div class="tmpl-content" id="tmpl-pane"><div style="color:var(--t3);font-size:12px;text-align:center;margin-top:50px">Select a template to preview</div></div></div></div>
+  </div>
+
+  <!-- PAGE: SHIFTS -->
+  <div class="page" id="p-shifts">
+    <div class="g4">
+      <div class="kpi"><div class="kpi-label">Active Today</div><div class="kpi-value">2</div><div class="kpi-sub kpi-good">Kimberly + Jobelle</div></div>
+      <div class="kpi"><div class="kpi-label">Weekend Coverage</div><div class="kpi-value">Yes</div><div class="kpi-sub kpi-good">24h SLA met</div></div>
+      <div class="kpi"><div class="kpi-label">Follow-ups Due</div><div class="kpi-value">3</div><div class="kpi-sub kpi-warn">Action today</div></div>
+      <div class="kpi"><div class="kpi-label">Shifts Today</div><div class="kpi-value">2</div><div class="kpi-sub">AM + PM</div></div>
+    </div>
+    <div class="g2">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="g2">
+          <div class="shift-card" id="card-KR">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="avatar av-kr">KR</div>
+              <div style="flex:1"><div style="font-size:12px;font-weight:700">Kimberly R.</div><div style="font-size:9px;color:var(--t3)">Senior Agent · AMZ USA/CA · eBay</div></div>
+              <span class="pill" id="badge-KR" style="background:var(--bg3);color:var(--t2)">Loading...</span>
+            </div>
+            <div class="shift-row"><span class="shift-label">Shift</span><span class="shift-val">8:30 AM – 12:30 PM EST</span></div>
+            <div class="shift-row"><span class="shift-label">Check-in</span><span class="shift-val" id="checkin-KR">—</span></div>
+            <div class="shift-row"><span class="shift-label">Check-out</span><span class="shift-val" id="checkout-KR">—</span></div>
+            <div class="shift-row"><span class="shift-label">Tickets</span><span class="shift-val" id="tickets-KR">—</span></div>
+            <div class="shift-bar"><div class="shift-bar-fill" id="bar-KR" style="width:0%"></div></div>
+          </div>
+          <div class="shift-card" id="card-JC">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="avatar av-jc">JC</div>
+              <div style="flex:1"><div style="font-size:12px;font-weight:700">Jobelle C.</div><div style="font-size:9px;color:var(--t3)">Agent · AMZ CA · eBay · Walmart</div></div>
+              <span class="pill" id="badge-JC" style="background:var(--bg3);color:var(--t2)">Loading...</span>
+            </div>
+            <div class="shift-row"><span class="shift-label">Shift</span><span class="shift-val">1:00 PM – 5:00 PM EST</span></div>
+            <div class="shift-row"><span class="shift-label">Check-in</span><span class="shift-val" id="checkin-JC">—</span></div>
+            <div class="shift-row"><span class="shift-label">Check-out</span><span class="shift-val" id="checkout-JC">—</span></div>
+            <div class="shift-row"><span class="shift-label">Tickets</span><span class="shift-val" id="tickets-JC">—</span></div>
+            <div class="shift-bar"><div class="shift-bar-fill" id="bar-JC" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Weekly Schedule</span><span class="card-subtitle">All times EST</span></div>
+          <div style="padding:10px;overflow-x:auto">
+            <table class="sched-table">
+              <thead><tr><th>Agent</th><th>Hours</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th></tr></thead>
+              <tbody>
+                <tr><td><div style="display:flex;align-items:center;gap:6px"><div class="avatar av-kr" style="width:20px;height:20px;font-size:8px">KR</div>Kimberly</div></td><td style="font-size:9px;color:var(--t2)">8:30–12:30</td><td><span class="pill pill-green" style="font-size:8px">8:30–12:30</span></td><td><span class="pill pill-green" style="font-size:8px">8:30–12:30</span></td><td><span class="pill pill-green" style="font-size:8px">8:30–12:30</span></td><td><span class="pill pill-green" style="font-size:8px">8:30–12:30</span></td><td><span class="pill pill-green" style="font-size:8px">8:30–12:30</span></td><td><span class="pill pill-blue" style="font-size:8px">8:30–12:30</span></td><td><span class="pill pill-gray" style="font-size:8px">Off</span></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:6px"><div class="avatar av-jc" style="width:20px;height:20px;font-size:8px">JC</div>Jobelle</div></td><td style="font-size:9px;color:var(--t2)">1:00–5:00</td><td><span class="pill pill-green" style="font-size:8px">1:00–5:00</span></td><td><span class="pill pill-green" style="font-size:8px">1:00–5:00</span></td><td><span class="pill pill-green" style="font-size:8px">1:00–5:00</span></td><td><span class="pill pill-green" style="font-size:8px">1:00–5:00</span></td><td><span class="pill pill-green" style="font-size:8px">1:00–5:00</span></td><td><span class="pill pill-gray" style="font-size:8px">Off</span></td><td><span class="pill pill-blue" style="font-size:8px">1:00–5:00</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Log Check-in / Check-out</span><span class="card-subtitle" id="sheet-status" style="color:var(--tw)">Initializing...</span></div>
+          <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field" style="grid-column:1/-1"><div class="field-label">Agent</div><select id="log-agent"><option value="KR">Kimberly Ross</option><option value="JC">Jobelle Cruz</option></select></div>
+            <div class="field"><div class="field-label">Action</div><select id="log-action"><option value="Check In">Check In</option><option value="Check Out">Check Out</option><option value="Start Break">Start Break</option><option value="End Break">End Break</option></select></div>
+            <div class="field"><div class="field-label">Time (EST)</div><input type="time" id="log-time"></div>
+            <div class="field"><div class="field-label">Tickets today</div><input type="number" id="log-tickets" placeholder="e.g. 14" min="0"></div>
+            <div class="field" style="grid-column:1/-1"><div class="field-label">Notes</div><input type="text" id="log-notes" placeholder="Late reason, notes..."></div>
+            <div style="grid-column:1/-1"><button class="btn-primary" style="width:100%" onclick="submitCheckin()">Submit Log Entry</button></div>
+            <div style="grid-column:1/-1;font-size:10px;color:var(--t3);text-align:center;min-height:16px" id="submit-msg"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Follow-up Cadence — Quick Ref</span></div>
+          <div style="padding:10px 14px">
+            <div class="cadence-item"><span class="pill pill-blue">Day 0</span><span>Send reply. Move to Waiting tab.</span></div>
+            <div class="cadence-item"><span class="pill pill-gray">Day 1</span><span>No action — allow 1 full business day.</span></div>
+            <div class="cadence-item"><span class="pill pill-amber">Day 2</span><span>Send first follow-up.</span></div>
+            <div class="cadence-item"><span class="pill pill-amber">Day 3</span><span>Final follow-up. Warn of closure.</span></div>
+            <div class="cadence-item"><span class="pill pill-red">No reply</span><span>Close with D6. Mark Inactive.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: KPI -->
+  <div class="page" id="p-kpi">
+    <div class="g4">
+      <div class="kpi"><div class="kpi-label">Team Avg QA</div><div class="kpi-value">82<span style="font-size:12px">/100</span></div><div class="kpi-sub kpi-good">Above 75 pass</div></div>
+      <div class="kpi"><div class="kpi-label">Avg First Response</div><div class="kpi-value">3.1<span style="font-size:12px">h</span></div><div class="kpi-sub kpi-good">Target: under 24h</div></div>
+      <div class="kpi"><div class="kpi-label">Dissatisfaction</div><div class="kpi-value">14.3<span style="font-size:12px">%</span></div><div class="kpi-sub kpi-alert">Benchmark: 6.47%</div></div>
+      <div class="kpi"><div class="kpi-label">Agents Passing QA</div><div class="kpi-value">1/2</div><div class="kpi-sub kpi-warn">1 needs coaching</div></div>
+    </div>
+    <div class="g2">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Kimberly scorecard -->
+        <div class="card">
+          <div class="card-header" style="gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;flex:1"><div class="avatar av-kr">KR</div><div><div style="font-size:12px;font-weight:700">Kimberly Ross</div><div style="font-size:9px;color:var(--t3)">Senior Agent · Amazon USA/CA, eBay, Shopify</div></div></div>
+            <div class="score-ring pass"><div class="score-val pass">94</div></div>
+            <span class="pill pill-green">Pass</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-row"><span class="metric-label">Tone & professionalism</span><div class="metric-bar"><div class="metric-fill" style="width:90%;background:var(--green)"></div></div><span class="metric-val">18/20</span></div>
+            <div class="metric-row"><span class="metric-label">Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:95%;background:var(--green)"></div></div><span class="metric-val">19/20</span></div>
+            <div class="metric-row"><span class="metric-label">SOP adherence</span><div class="metric-bar"><div class="metric-fill" style="width:100%;background:var(--green)"></div></div><span class="metric-val">20/20</span></div>
+            <div class="metric-row"><span class="metric-label">Response time</span><div class="metric-bar"><div class="metric-fill" style="width:85%;background:var(--green)"></div></div><span class="metric-val">17/20</span></div>
+            <div class="metric-row"><span class="metric-label">Resolution quality</span><div class="metric-bar"><div class="metric-fill" style="width:100%;background:var(--green)"></div></div><span class="metric-val">20/20</span></div>
+          </div>
+        </div>
+        <!-- Jobelle scorecard -->
+        <div class="card">
+          <div class="card-header" style="gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;flex:1"><div class="avatar av-jc">JC</div><div><div style="font-size:12px;font-weight:700">Jobelle Cruz</div><div style="font-size:9px;color:var(--t3)">Agent · Amazon CA, eBay, Walmart</div></div></div>
+            <div class="score-ring fail"><div class="score-val fail">73</div></div>
+            <span class="pill pill-red">Fail — coaching</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-row"><span class="metric-label">Tone & professionalism</span><div class="metric-bar"><div class="metric-fill" style="width:75%;background:var(--amber)"></div></div><span class="metric-val">15/20</span></div>
+            <div class="metric-row"><span class="metric-label">Accuracy</span><div class="metric-bar"><div class="metric-fill" style="width:80%;background:var(--amber)"></div></div><span class="metric-val">16/20</span></div>
+            <div class="metric-row"><span class="metric-label">SOP adherence</span><div class="metric-bar"><div class="metric-fill" style="width:70%;background:var(--red)"></div></div><span class="metric-val">14/20</span></div>
+            <div class="metric-row"><span class="metric-label">Response time</span><div class="metric-bar"><div class="metric-fill" style="width:80%;background:var(--amber)"></div></div><span class="metric-val">16/20</span></div>
+            <div class="metric-row"><span class="metric-label">Resolution quality</span><div class="metric-bar"><div class="metric-fill" style="width:60%;background:var(--red)"></div></div><span class="metric-val">12/20</span></div>
+            <div style="padding-top:8px;border-top:1px solid var(--bd);font-size:10px;color:var(--te);margin-top:4px">Coaching: Explain refund deductions upfront. Review SOP-012.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="card-header"><span class="card-title">KPI Targets</span></div>
+          <div style="padding:12px 14px">
+            <div class="target-row"><span style="color:var(--t2)">Response time</span><span style="font-weight:700">Under 24h · 7 days/week</span></div>
+            <div class="target-row"><span style="color:var(--t2)">Return request</span><span style="font-weight:700;color:var(--red)">48h max · zero exceptions</span></div>
+            <div class="target-row"><span style="color:var(--t2)">ODR</span><span style="font-weight:700;color:var(--red)">Below 1%</span></div>
+            <div class="target-row"><span style="color:var(--t2)">Buyer contact rate</span><span style="font-weight:700">Below 1.63%</span></div>
+            <div class="target-row"><span style="color:var(--t2)">Dissatisfaction</span><span style="font-weight:700;color:var(--red)">Below 6.47%</span></div>
+            <div class="target-row"><span style="color:var(--t2)">QA score</span><span style="font-weight:700">75/100 to pass</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Negative Review Root Causes</span><span class="card-subtitle">18 reviews</span></div>
+          <div style="padding:12px 14px">
+            <div class="bar-row"><span class="bar-label">Damaged in transit</span><div class="bar-bg"><div class="bar-fill" style="width:28%;background:var(--red)"></div></div><span class="bar-val" style="color:var(--red)">28%</span></div>
+            <div class="bar-row"><span class="bar-label">Not received</span><div class="bar-bg"><div class="bar-fill" style="width:22%;background:var(--red)"></div></div><span class="bar-val" style="color:var(--red)">22%</span></div>
+            <div class="bar-row"><span class="bar-label">Listing inaccuracy</span><div class="bar-bg"><div class="bar-fill" style="width:17%;background:var(--amber)"></div></div><span class="bar-val" style="color:var(--tw)">17%</span></div>
+            <div class="bar-row"><span class="bar-label">Wrong item sent</span><div class="bar-bg"><div class="bar-fill" style="width:17%;background:var(--amber)"></div></div><span class="bar-val" style="color:var(--tw)">17%</span></div>
+            <div class="bar-row"><span class="bar-label">CS handling</span><div class="bar-bg"><div class="bar-fill" style="width:11%;background:var(--t3)"></div></div><span class="bar-val" style="color:var(--t2)">11%</span></div>
+            <div class="bar-row"><span class="bar-label">Defective, no follow-up</span><div class="bar-bg"><div class="bar-fill" style="width:6%;background:var(--t3)"></div></div><span class="bar-val" style="color:var(--t2)">6%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: AI SETTINGS -->
+  <div class="page" id="p-ai">
+    <div class="card">
+      <div class="card-header"><span class="card-title">AI Configuration</span><span class="card-subtitle">OpenAI Integration</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+        <div class="alert-blue">AI suggestions use your company policies as context. The AI reads your policy text and SOPs to provide tailored recommendations alongside the hard-coded decision engine results.</div>
+        <div class="field">
+          <div class="field-label">OpenAI API Key</div>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="ai-api-key" placeholder="sk-..." value="">
+            <button class="btn-primary btn-sm" onclick="saveAIKey()" style="white-space:nowrap">Save Key</button>
+            <button class="btn-sm" onclick="testAIKey()" style="white-space:nowrap">Test</button>
+          </div>
+          <div style="font-size:9px;color:var(--t3);margin-top:2px">Your key is stored in the data file. Share the file to share the key.</div>
+        </div>
+        <div id="ai-key-status" style="font-size:10px;min-height:16px"></div>
+        <div class="field">
+          <div class="field-label">AI Model</div>
+          <select id="ai-model">
+            <option value="gpt-4o-mini">GPT-4o Mini (fast, cheap)</option>
+            <option value="gpt-4o">GPT-4o (best quality)</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label">System Prompt — AI Instructions</div>
+          <textarea id="ai-system-prompt" rows="8" style="min-height:160px">You are an expert customer service advisor for MSHZ International, an e-commerce company selling on Amazon USA, Amazon CA, eBay, Shopify, and Walmart.
+
+Your role: Given a customer inquiry situation and the company's policies, provide a clear, actionable recommendation to the CS agent. Be specific — reference exact SOP numbers, template codes, and escalation rules.
+
+Rules:
+- Always prioritize Amazon account health (ODR below 1%, response within 24h, returns within 48h)
+- Reference specific policy rules (R-1 through R-8) when relevant
+- Mention exact template codes (A2, B3, B7, etc.) the agent should use
+- Flag escalation triggers clearly
+- Be concise but thorough — agents are busy
+- If the situation is ambiguous, recommend the safer/more customer-friendly option</textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Policy Context — Sent to AI with Every Request</div>
+          <textarea id="ai-policy-context" rows="12" style="min-height:240px">MSHZ INTERNATIONAL — CUSTOMER SERVICE POLICY CONTEXT
+
+REFUND RULES:
+R-1: Return request response within 48 HOURS. A-Z without 48h response = Amazon auto-grants.
+R-2: Message response within 24h, 7 days/week including weekends.
+R-3: Wrong/damaged by MSHZ = full refund, zero deductions.
+R-4: Customer-fault return = deduct return shipping from refund.
+R-5: Issue refund after return received unless returnless.
+R-6: Returnless refund = issue immediately, customer keeps item.
+R-7: Do NOT resend a completely different item.
+R-8: Refund within 2 business days of receiving return.
+
+ACCOUNT HEALTH THRESHOLDS:
+- ODR: Below 1% (target 0.5%). Includes negative feedback, A-Z claims, chargebacks.
+- Message response rate: Above 95% within 24h, 7 days/week.
+- Return request response: 100% within 48h. A-Z without 48h = auto-grant.
+- Buyer contact rate: Target below 1.63%. Currently 2.14%.
+- Buyer dissatisfaction rate: Target below 6.47%. Currently 14.29%.
+
+ESCALATION RULES:
+- Listing inaccuracy: resolve customer, submit listing report same day.
+- Refund > $40: escalate before processing.
+- FBA wrong item: STOP, escalate IMMEDIATELY before acting.
+- A-Z claim filed: notify supervisor within 1 hour, respond within 48h.
+- Technical/Xtenzi: assign to Harleen, never answer independently.
+
+CARRIER CONTACTS:
+- USPS (USA): usps.com/help/claims.htm — min 7 days wait
+- UPS (USA/CA): 1-800-742-5877 — min 5 business days
+- Canada Post (CA): 1-866-607-6301 — min 5 business days
+- Stallion Express (CA): stallionexpress.ca/support — min 3 business days
+- FedEx (USA): 1-800-463-3339 — min 5 business days
+
+CONDUCT RULES:
+1. Track all conversations in eDesk. Document every action.
+2. Read entire thread before replying.
+3. Every reply must move the ticket forward.
+4. Personalize every interaction.
+5. Response time: 24h or less, 7 days/week.
+6. Don't take hostile customers personally. Escalate if needed.
+7. Underpromise, overdeliver.
+8. Customer is always right — resolve, don't debate.
+9. Document every action before closing.</textarea>
+        </div>
+        <button class="btn-primary" onclick="saveAISettings()">Save All AI Settings</button>
+        <div id="ai-save-status" style="font-size:10px;min-height:16px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: ADMIN -->
+  <div class="page" id="p-admin">
+    <div id="admin-lock" class="pin-screen">
+      <div style="font-size:36px">&#128274;</div>
+      <div class="pin-title">Admin Access</div>
+      <div class="pin-subtitle">Enter your 4-digit PIN to edit policies.<br>Only the account owner can access this panel.</div>
+      <input class="pin-input" type="password" maxlength="4" id="pin-input" placeholder="••••" oninput="checkPin(this.value)" autocomplete="off">
+      <div class="pin-error" id="pin-error">Incorrect PIN. Try again.</div>
+    </div>
+    <div id="admin-content" style="display:none;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:16px;font-weight:700;color:var(--t1)">Policy Admin Panel</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Edit policies directly. Changes save to your connected data file.</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="pill pill-green" id="admin-storage-badge">Connected — File Storage</span>
+          <button class="btn-sm" onclick="lockAdmin()">&#128274; Lock</button>
+        </div>
+      </div>
+      <div class="admin-tabs">
+        <div class="admin-tab active" onclick="swAdmin('sops',this)">SOPs</div>
+        <div class="admin-tab" onclick="swAdmin('kpis',this)">KPI Targets</div>
+        <div class="admin-tab" onclick="swAdmin('conduct',this)">Agent Conduct</div>
+        <div class="admin-tab" onclick="swAdmin('carriers',this)">Carriers</div>
+        <div class="admin-tab" onclick="swAdmin('de',this)">Decision Engine</div>
+        <div class="admin-tab" onclick="swAdmin('pin',this)">Change PIN</div>
+      </div>
+      <div class="admin-panel active" id="admin-sops">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:700">Standard Operating Procedures</div><button class="btn-sm btn-primary" onclick="addSOP()">+ Add SOP</button></div>
+        <div id="sop-editor-list"></div>
+        <div style="display:flex;gap:8px;align-items:center"><button class="btn-primary" onclick="saveSection('sops')" style="flex:1">Save All SOP Changes</button><span class="save-indicator" id="save-sops"></span></div>
+      </div>
+      <div class="admin-panel" id="admin-kpis">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px">KPI Targets</div>
+        <div id="kpi-editor-list"></div>
+        <div style="display:flex;gap:8px;align-items:center"><button class="btn-primary" onclick="saveSection('kpis')" style="flex:1">Save All KPI Changes</button><span class="save-indicator" id="save-kpis"></span></div>
+      </div>
+      <div class="admin-panel" id="admin-conduct">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:700">Agent Conduct Rules</div><button class="btn-sm btn-primary" onclick="addConduct()">+ Add Rule</button></div>
+        <div id="conduct-editor-list"></div>
+        <div style="display:flex;gap:8px;align-items:center"><button class="btn-primary" onclick="saveSection('conduct')" style="flex:1">Save All Conduct Changes</button><span class="save-indicator" id="save-conduct"></span></div>
+      </div>
+      <div class="admin-panel" id="admin-carriers">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:700">Carrier Contacts</div><button class="btn-sm btn-primary" onclick="addCarrier()">+ Add Carrier</button></div>
+        <div id="carrier-editor-list"></div>
+        <div style="display:flex;gap:8px;align-items:center"><button class="btn-primary" onclick="saveSection('carriers')" style="flex:1">Save All Carrier Changes</button><span class="save-indicator" id="save-carriers"></span></div>
+      </div>
+      <div class="admin-panel" id="admin-de">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:700">Decision Engine Data</div><button class="btn-sm btn-primary" onclick="addDERes()">+ Add Resolution</button></div>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-top:8px;margin-bottom:4px">Marketplaces</div>
+        <div id="de-mkt-list"></div>
+        <button class="btn-sm" onclick="addDEMkt()" style="margin-top:4px">+ Add Marketplace</button>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-top:12px;margin-bottom:4px">Inquiry Types</div>
+        <div id="de-inq-list"></div>
+        <button class="btn-sm" onclick="addDEInq()" style="margin-top:4px">+ Add Inquiry Type</button>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-top:12px;margin-bottom:4px">Clarifying Questions <span style="font-size:9px;font-weight:400;color:var(--t3)">(per inquiry type — fill resolve key OR the Yes/No fields)</span></div>
+        <div id="de-sub-list"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-top:12px;margin-bottom:4px">Resolutions</div>
+        <div id="de-res-list"></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn-primary" onclick="saveDE()" style="flex:1">Save All Decision Engine Changes</button><span class="save-indicator" id="save-de"></span></div>
+      </div>
+      <div class="admin-panel" id="admin-pin">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">Change PIN</div>
+        <div style="display:flex;flex-direction:column;gap:10px;max-width:300px">
+          <div class="field"><div class="field-label">Current PIN</div><input type="password" maxlength="4" id="pin-current" placeholder="Current PIN"></div>
+          <div class="field"><div class="field-label">New PIN</div><input type="password" maxlength="4" id="pin-new" placeholder="New 4-digit PIN"></div>
+          <div class="field"><div class="field-label">Confirm New PIN</div><input type="password" maxlength="4" id="pin-confirm" placeholder="Repeat new PIN"></div>
+          <button class="btn-primary" onclick="changePIN()">Update PIN</button>
+          <div id="pin-change-msg" style="font-size:10px;color:var(--t3)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.sb-item').forEach(function(s){ s.classList.remove('active'); });
+  var pg = document.getElementById('p-' + id);
+  if (!pg) return;
+  pg.classList.add('active');
+  if (el && el.classList) el.classList.add('active');
+  var T = { decision:'Decision Engine', policy:'Policy Dashboard', templates:'Template Library', shifts:'Shift Schedule', kpi:'Agent KPI Dashboard', ai:'AI Settings', admin:'Admin Panel' };
+  document.getElementById('topbar-title').textContent = T[id] || id;
+}
+
+function setMode(m) {
+  document.getElementById('mode-wizard').classList.toggle('sel', m==='wizard');
+  document.getElementById('mode-search').classList.toggle('sel', m==='search');
+  document.getElementById('wizard-panel').style.display = m==='wizard' ? '' : 'none';
+  document.getElementById('search-panel').style.display = m==='search' ? '' : 'none';
+}
+
+// ═══════════════════════════════════════════════════
+// PERSISTENT FILE-BASED STORAGE
+// Uses File System Access API (Chrome/Edge) for
+// direct read/write to a JSON sidecar file.
+// Falls back to manual load/export for other browsers.
+// Data travels WITH the file — share both files together.
+// ═══════════════════════════════════════════════════
+var FILE_HANDLE = null;   // File System Access API handle
+var DATA_STORE = {};      // In-memory copy of all persisted data
+var SAVE_TIMER = null;    // Debounce timer for auto-save
+var FS_API_SUPPORTED = ('showOpenFilePicker' in window);
+
+// Default data shape
+function getDefaultData() {
+  return {
+    _meta: { version: '3.0', created: new Date().toISOString(), lastSaved: null },
+    admin_pin: '1234',
+    shifts: [],
+    ticket_log: [],
+    ai_settings: {
+      key: '',
+      model: 'gpt-4o-mini',
+      system_prompt: document.getElementById('ai-system-prompt') ? document.getElementById('ai-system-prompt').value : '',
+      policy_context: document.getElementById('ai-policy-context') ? document.getElementById('ai-policy-context').value : ''
+    },
+    sops: [
+      {id:'SOP-001',title:'Cancellation — item NOT yet shipped',trigger:'Customer requests cancel before label printed',steps:'1. Check Linnworks — confirm no label printed.\n2. Park order immediately.\n3. Notify shipping team.\n4. Cancel: Linnworks → ShipStation → Marketplace.\n5. Email buyer confirming cancellation.',templates:'Cancellation confirmation',escalate:'Label already printed — consult shipping team.'},
+      {id:'SOP-003',title:'Damaged item — complete/major',trigger:'Item arrived completely damaged or leaking',steps:'1. Send A2. Ask: What damaged? Entire or part? Box also damaged?\n2. Box AND product damaged → carrier fault → claim AND resolve.\n3. Product only, box intact → packing issue → resolve, no claim.\n4. Assess return value.\n5. Resend: Linnworks, ship within 1 BD, send B7.',templates:'A2, B7',escalate:'High-value item or resolution beyond your authority.'},
+      {id:'SOP-006',title:'Wrong item sent by MSHZ',trigger:'Customer received different item, wrong size/color/qty',steps:'1. Ask: What did you receive? Confirm exactly.\n2. Seller error confirmed. Investigate. Notify supervisor.\n3. FBA: Do NOT direct to Amazon. Escalate BEFORE acting.\n4. Offer resend or full refund.\n5. Resend: Linnworks, 1 BD, send B7.\n6. Return: prepaid label — MSHZ pays.',templates:'B7',escalate:'FBA wrong item — escalate IMMEDIATELY.'},
+      {id:'SOP-009',title:'Delivered — customer not received',trigger:'Tracking shows delivered, customer says not received',steps:'1. Confirm 4 points: address? household? post office? neighbor?\n2. Send B3 — notify delivery, ask 4 points.\n3. Open carrier search SAME DAY.\n4. Notify: investigating, allow 2 BD.\n5. After 2 BD: located → ETA. Not located → resend or refund.',templates:'B3, B3-3, B3-4',escalate:'High-value — supervisor approval before resend or refund.'},
+      {id:'SOP-016',title:'Listing inaccuracy reported',trigger:'Customer says description, photo, or specs are wrong',steps:'1. Resolve customer issue first.\n2. Do NOT close without Step 3.\n3. Submit listing report: marketplace+ASIN, quote, what listing shows, order ID.\n4. Add eDesk note: Listing report submitted [date].\n5. Close ONLY after report submitted.',templates:'Resolution template + internal note',escalate:'Listings team does not action within 48h.'}
+    ],
+    kpis: [
+      {metric:'Response time — all messages',target:'Under 24h, 7 days/week',current:'3.09h avg',status:'good'},
+      {metric:'Return request response',target:'Within 48h — zero exceptions',current:'Critical policy',status:'alert'},
+      {metric:'Order Defect Rate (ODR)',target:'Below 1% (target 0.5%)',current:'Below 1% — monitor',status:'alert'},
+      {metric:'Buyer contact rate',target:'Below 1.63%',current:'Currently 2.14%',status:'warn'},
+      {metric:'Buyer dissatisfaction rate',target:'Below 6.47%',current:'Currently 14.29%',status:'alert'},
+      {metric:'365-day positive rate',target:'Above 90%',current:'Currently 80%',status:'warn'},
+      {metric:'QA score (monthly)',target:'75/100 to pass',current:'Team avg: 82',status:'good'}
+    ],
+    conduct: [
+      {num:'1',rule:'Get organized',detail:'Track all conversations in eDesk. Document every action before closing.'},
+      {num:'2',rule:'Read the entire thread first',detail:'Before replying, read every message.'},
+      {num:'3',rule:'Every reply must move the ticket forward',detail:'Each message is one step toward resolution.'},
+      {num:'4',rule:'Personalize every interaction',detail:'Use customer name, reference their specific order.'},
+      {num:'5',rule:'Response time: 24h or less — 7 days a week',detail:'Includes weekends and holidays. Non-negotiable.'},
+      {num:'6',rule:'Do not take hostile customers personally',detail:'Stay professional. Escalate to team lead if needed.'},
+      {num:'7',rule:'Underpromise, overdeliver',detail:'Never give delivery estimate without confirming with warehouse.'},
+      {num:'8',rule:'Customer is always right',detail:'Work toward resolution even if factually incorrect.'},
+      {num:'9',rule:'Document every action before closing',detail:'Clear note on every ticket — what was done and why.'}
+    ],
+    carriers: [
+      {name:'USPS',region:'USA',contact:'usps.com/help/claims.htm',method:'Online',minWait:'7 days after mailing',notes:'Minimum 7 days — do not file earlier.'},
+      {name:'UPS',region:'USA & CA',contact:'1-800-742-5877',method:'Phone',minWait:'5 business days',notes:'Phone only for investigations.'},
+      {name:'Canada Post',region:'CA',contact:'1-866-607-6301',method:'Phone',minWait:'5 business days',notes:'Canadian domestic shipments.'},
+      {name:'Stallion Express',region:'CA',contact:'stallionexpress.ca/support',method:'Portal',minWait:'3 business days',notes:'Canadian fulfillment hub.'},
+      {name:'ChitChats',region:'CA',contact:'chitchats.com',method:'Portal',minWait:'3 business days',notes:'Lightweight Canadian parcels.'},
+      {name:'FedEx',region:'USA',contact:'1-800-463-3339',method:'Phone',minWait:'5 business days',notes:''}
+    ]
+  };
+}
+
+// ── Store / Load wrappers ──
+function store(key, val) {
+  DATA_STORE[key] = val;
+  scheduleSave();
+}
+function load(key, fallback) {
+  return (key in DATA_STORE) ? DATA_STORE[key] : fallback;
+}
+
+// ── Debounced auto-save ──
+function scheduleSave() {
+  if (SAVE_TIMER) clearTimeout(SAVE_TIMER);
+  SAVE_TIMER = setTimeout(function(){ saveToFile(); }, 500);
+}
+
+// ── Write to file handle or download ──
+async function saveToFile() {
+  DATA_STORE._meta = DATA_STORE._meta || {};
+  DATA_STORE._meta.lastSaved = new Date().toISOString();
+  
+  // Also capture current AI settings from the form
+  if (document.getElementById('ai-api-key')) {
+    var k = document.getElementById('ai-api-key').value.trim();
+    if (k) DATA_STORE.ai_settings = DATA_STORE.ai_settings || {};
+    if (k) DATA_STORE.ai_settings.key = k;
+  }
+  
+  var json = JSON.stringify(DATA_STORE, null, 2);
+  
+  if (FILE_HANDLE) {
+    try {
+      var writable = await FILE_HANDLE.createWritable();
+      await writable.write(json);
+      await writable.close();
+      updateStorageUI('saved');
+      return true;
+    } catch(e) {
+      console.warn('File write failed:', e);
+      updateStorageUI('error', e.message);
+      return false;
+    }
+  }
+  // No file handle — data stays in memory only
+  updateStorageUI('memory');
+  return false;
+}
+
+// ── Load from file handle ──
+async function loadFromFile(handle) {
+  try {
+    var file = await handle.getFile();
+    var text = await file.text();
+    var parsed = JSON.parse(text);
+    DATA_STORE = parsed;
+    FILE_HANDLE = handle;
+    applyLoadedData();
+    updateStorageUI('connected', handle.name);
+    return true;
+  } catch(e) {
+    console.error('File read failed:', e);
+    updateStorageUI('error', e.message);
+    return false;
+  }
+}
+
+// ── Apply loaded data to the app ──
+function applyLoadedData() {
+  // Admin PIN
+  if (DATA_STORE.admin_pin) ADMIN_PIN = DATA_STORE.admin_pin;
+  
+  // Admin data sections
+  if (DATA_STORE.sops) ADMIN_DATA.sops = DATA_STORE.sops;
+  if (DATA_STORE.kpis) ADMIN_DATA.kpis = DATA_STORE.kpis;
+  if (DATA_STORE.conduct) ADMIN_DATA.conduct = DATA_STORE.conduct;
+  if (DATA_STORE.carriers) ADMIN_DATA.carriers = DATA_STORE.carriers;
+
+  // Decision Engine
+  if (DATA_STORE.decision_engine) {
+    var de=DATA_STORE.decision_engine;
+    if(de.marketplaces) WIZ_MKTS=de.marketplaces;
+    if(de.inquiry_types) WIZ_INQS=de.inquiry_types;
+    if(de.sub) SUB=de.sub;
+    if(de.res) RES=de.res;
+    ADMIN_DATA.decision_engine=DATA_STORE.decision_engine;
+  }
+
+  // AI settings
+  if (DATA_STORE.ai_settings) {
+    if (DATA_STORE.ai_settings.key) document.getElementById('ai-api-key').value = DATA_STORE.ai_settings.key;
+    if (DATA_STORE.ai_settings.model) document.getElementById('ai-model').value = DATA_STORE.ai_settings.model;
+    if (DATA_STORE.ai_settings.system_prompt) document.getElementById('ai-system-prompt').value = DATA_STORE.ai_settings.system_prompt;
+    if (DATA_STORE.ai_settings.policy_context) document.getElementById('ai-policy-context').value = DATA_STORE.ai_settings.policy_context;
+  }
+  
+  // Reload shift data
+  loadShiftData();
+}
+
+// ── UI status updates ──
+function updateStorageUI(state, detail) {
+  var dot = document.getElementById('storage-dot');
+  var status = document.getElementById('storage-status');
+  var lastSaved = document.getElementById('last-saved');
+  var btnExport = document.getElementById('btn-export-file');
+  
+  if (state === 'connected' || state === 'saved') {
+    dot.style.background = 'var(--green)';
+    status.innerHTML = '<span id="storage-dot" style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></span><span>Connected: ' + (detail || 'mshz_data.json') + '</span>';
+    btnExport.style.display = 'none';
+    if (DATA_STORE._meta && DATA_STORE._meta.lastSaved) {
+      var d = new Date(DATA_STORE._meta.lastSaved);
+      lastSaved.textContent = 'Last saved: ' + d.toLocaleTimeString();
+    }
+  } else if (state === 'memory') {
+    dot.style.background = 'var(--amber)';
+    status.innerHTML = '<span id="storage-dot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0"></span><span>In-memory only (not saved to file)</span>';
+    btnExport.style.display = '';
+    lastSaved.textContent = 'Connect or export a file to persist data';
+  } else if (state === 'error') {
+    dot.style.background = 'var(--red)';
+    status.innerHTML = '<span id="storage-dot" style="width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0"></span><span>Error: ' + (detail || 'Unknown') + '</span>';
+    btnExport.style.display = '';
+  }
+}
+
+// ── Connect to existing data file (File System Access API or file input fallback) ──
+async function connectDataFile() {
+  if (FS_API_SUPPORTED) {
+    try {
+      var [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'MSHZ Data File', accept: {'application/json': ['.json']} }],
+        multiple: false
+      });
+      // Request write permission
+      var perm = await handle.requestPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        await loadFromFile(handle);
+      } else {
+        // Read-only fallback
+        await loadFromFile(handle);
+        FILE_HANDLE = null; // Can't write, so clear handle
+        updateStorageUI('memory');
+        alert('Read-only access. Changes will stay in memory. Use "Export Data File" to save.');
+      }
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('Error: ' + e.message);
+    }
+  } else {
+    // Fallback: file input
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json';
+    inp.onchange = function() {
+      if (!inp.files[0]) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          DATA_STORE = JSON.parse(reader.result);
+          applyLoadedData();
+          updateStorageUI('memory');
+        } catch(e) {
+          alert('Invalid JSON file: ' + e.message);
+        }
+      };
+      reader.readAsText(inp.files[0]);
+    };
+    inp.click();
+  }
+}
+
+// ── Create a brand new data file ──
+async function createNewDataFile() {
+  DATA_STORE = getDefaultData();
+  
+  // Capture current form state into the new data
+  if (document.getElementById('ai-system-prompt')) {
+    DATA_STORE.ai_settings.system_prompt = document.getElementById('ai-system-prompt').value;
+  }
+  if (document.getElementById('ai-policy-context')) {
+    DATA_STORE.ai_settings.policy_context = document.getElementById('ai-policy-context').value;
+  }
+  
+  if (FS_API_SUPPORTED) {
+    try {
+      var handle = await window.showSaveFilePicker({
+        suggestedName: 'mshz_data.json',
+        types: [{ description: 'MSHZ Data File', accept: {'application/json': ['.json']} }]
+      });
+      FILE_HANDLE = handle;
+      await saveToFile();
+      updateStorageUI('connected', handle.name);
+    } catch(e) {
+      if (e.name !== 'AbortError') {
+        // Fallback to download
+        downloadJSON();
+      }
+    }
+  } else {
+    downloadJSON();
+    updateStorageUI('memory');
+  }
+}
+
+// ── Export / download current data ──
+function exportDataFile() {
+  DATA_STORE._meta = DATA_STORE._meta || {};
+  DATA_STORE._meta.lastSaved = new Date().toISOString();
+  
+  // Capture AI settings
+  captureAISettings();
+  
+  downloadJSON();
+}
+
+function captureAISettings() {
+  DATA_STORE.ai_settings = DATA_STORE.ai_settings || {};
+  var k = document.getElementById('ai-api-key').value.trim();
+  if (k) DATA_STORE.ai_settings.key = k;
+  DATA_STORE.ai_settings.model = document.getElementById('ai-model').value;
+  DATA_STORE.ai_settings.system_prompt = document.getElementById('ai-system-prompt').value;
+  DATA_STORE.ai_settings.policy_context = document.getElementById('ai-policy-context').value;
+}
+
+function downloadJSON() {
+  var json = JSON.stringify(DATA_STORE, null, 2);
+  var blob = new Blob([json], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'mshz_data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Init data store with defaults
+DATA_STORE = getDefaultData();
+
+// ═══════════════════════════════════════════════════
+// SHIFT SYSTEM
+// ═══════════════════════════════════════════════════
+var SCHEDULES = { KR:{inH:8,inM:30,outH:12,outM:30}, JC:{inH:13,inM:0,outH:17,outM:0} };
+
+function getESTNow() {
+  var now = new Date();
+  var utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (-5 * 3600000));
+}
+
+function calcStatus(agent, checkin, checkout) {
+  var now = getESTNow(), nm = now.getHours()*60+now.getMinutes(), s = SCHEDULES[agent];
+  var si = s.inH*60+s.inM, so = s.outH*60+s.outM;
+  if (checkout && checkout !== '—') return {text:'Checked out',bg:'var(--bg3)',color:'var(--t2)'};
+  if (!checkin || checkin === '—') {
+    if (nm > so) return {text:'Absent',bg:'var(--be)',color:'var(--te)'};
+    if (nm > si+10) return {text:'Not checked in',bg:'var(--be)',color:'var(--te)'};
+    return {text:'Not started',bg:'var(--bg3)',color:'var(--t2)'};
+  }
+  var parts = checkin.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (parts) {
+    var h = parseInt(parts[1]), m = parseInt(parts[2]);
+    if (/PM/i.test(parts[3]) && h!==12) h+=12;
+    if (/AM/i.test(parts[3]) && h===12) h=0;
+    if (h*60+m > si+10) return {text:'Late',bg:'var(--bw)',color:'var(--tw)'};
+  }
+  return {text:'On shift',bg:'var(--bo)',color:'var(--to)'};
+}
+
+function updateCard(agent, row) {
+  var ci=row.checkin||'—', co=row.checkout||'—', tk=row.tickets||'—', ts=row.timestamp||'—';
+  document.getElementById('checkin-'+agent).textContent=ci;
+  document.getElementById('checkout-'+agent).textContent=co;
+  document.getElementById('tickets-'+agent).textContent=tk;
+  var st=calcStatus(agent,ci,co);
+  var badge=document.getElementById('badge-'+agent);
+  badge.textContent=st.text; badge.style.background=st.bg; badge.style.color=st.color;
+  var s=SCHEDULES[agent], now=getESTNow(), nm=now.getHours()*60+now.getMinutes();
+  var si=s.inH*60+s.inM, so=s.outH*60+s.outM, len=so-si;
+  var el=Math.max(0,Math.min(len,nm-si));
+  document.getElementById('bar-'+agent).style.width=(len>0?Math.round((el/len)*100):0)+'%';
+}
+
+function loadShiftData() {
+  var today = new Date().toISOString().substring(0,10);
+  var saved = DATA_STORE.shifts || [];
+  var result = {KR:{},JC:{}};
+  saved.filter(function(r){return r.date===today;}).forEach(function(r){
+    if(!result[r.agent]) return;
+    if(r.action==='Check In') result[r.agent].checkin=r.time;
+    if(r.action==='Check Out') result[r.agent].checkout=r.time;
+    if(r.tickets) result[r.agent].tickets=r.tickets;
+    result[r.agent].timestamp=r.loggedAt;
+  });
+  updateCard('KR',result.KR); updateCard('JC',result.JC);
+  document.getElementById('sheet-status').textContent= FILE_HANDLE ? 'Live · File Storage' : 'Live · In-Memory';
+  document.getElementById('sheet-status').style.color= FILE_HANDLE ? '#1e8e3e' : '#e37400';
+}
+
+function submitCheckin() {
+  var agent=document.getElementById('log-agent').value, action=document.getElementById('log-action').value;
+  var time=document.getElementById('log-time').value, tickets=document.getElementById('log-tickets').value;
+  var notes=document.getElementById('log-notes').value, msg=document.getElementById('submit-msg');
+  if(!time){msg.textContent='Please enter a time.';msg.style.color='var(--red)';return;}
+  var parts=time.split(':'), h=parseInt(parts[0]), m=parts[1];
+  var ampm=h>=12?'PM':'AM', h12=h%12||12;
+  var timeStr=h12+':'+m+' '+ampm;
+  var today=new Date().toISOString().substring(0,10);
+  var now=getESTNow();
+  var loggedAt=(now.getHours()%12||12)+':'+String(now.getMinutes()).padStart(2,'0')+' '+(now.getHours()>=12?'PM':'AM');
+  var entry={date:today,agent:agent,action:action,time:timeStr,tickets:tickets,notes:notes,loggedAt:loggedAt};
+  var saved = DATA_STORE.shifts || [];
+  saved.push(entry);
+  DATA_STORE.shifts = saved;
+  scheduleSave();
+  msg.textContent=action+' logged for '+(agent==='KR'?'Kimberly':'Jobelle')+' at '+timeStr;
+  msg.style.color='var(--green)';
+  document.getElementById('log-tickets').value='';
+  document.getElementById('log-notes').value='';
+  loadShiftData();
+}
+
+(function(){
+  var now=getESTNow(), inp=document.getElementById('log-time');
+  if(inp) inp.value=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+})();
+loadShiftData();
+setInterval(loadShiftData,30000);
+
+// ═══════════════════════════════════════════════════
+// DECISION ENGINE — WIZARD DATA
+// ═══════════════════════════════════════════════════
+var wMkt='', wInq='';
+var RES={
+  'cancel-not-shipped':{title:'SOP-001 — Cancel: not yet shipped',steps:['Check Linnworks Open Orders — confirm no label printed.','Park order in Linnworks immediately.','Notify shipping team before cancelling.','Cancel: Linnworks → ShipStation → Marketplace.','Email buyer confirming cancellation and full refund.'],templates:['Cancellation confirmation'],escalate:'Shipping label already printed — consult shipping team first.'},
+  'cancel-shipped':{title:'SOP-002 — Cancel: already shipped',steps:['Confirm order in Processed Orders tab.','Notify customer: already shipped — cannot cancel.','Advise return after delivery for refund.','Refund on receipt minus return shipping (customer fault).'],templates:['B11-B'],escalate:'Customer hostile — escalate to team lead.'},
+  'damaged-major':{title:'SOP-003 — Major damaged item',steps:['Send A2. Ask: What damaged? Entire or part? Box also damaged?','Box AND product damaged → carrier fault → claim AND offer resolution.','Product only damaged, box intact → packing issue → offer resolution.','Assess return value. Destroyed = no return.','Resend: Linnworks, ship within 1 BD, send B7.','⚠ Kitchen/Luggage/Electronics → flag to supervisor. 3–5× refund rates.'],templates:['A2','B7'],escalate:'High-value item or resolution beyond your authority.'},
+  'damaged-minor':{title:'SOP-004 — Minor damaged item',steps:['Send A2 to confirm damage extent.','Minor cosmetic: offer 10% discount first.','Higher discount requested: consult supervisor — do not commit.','Return insisted: issue return label, full refund.','Set damaged: offer to resend that piece only.','Open carrier claim if outer box also damaged.'],templates:['A2','A3'],escalate:'Customer requests above 10% — supervisor approval first.'},
+  'wrong-item':{title:'SOP-006 — Wrong item sent',steps:['Ask: "What did you receive?" Confirm exactly.','Seller error confirmed. Investigate: wrong pick or Linnworks SKU error? Notify supervisor.','⚠ FBA: Do NOT direct to Amazon. Escalate BEFORE acting.','Offer resend or full refund per preference.','Resend: Linnworks, ship within 1 BD, send B7.','Return: prepaid label — MSHZ pays all costs.'],templates:['B7'],escalate:'FBA wrong item — escalate IMMEDIATELY before contacting customer.'},
+  'not-received-before':{title:'SOP-008 — In transit, before delivery date',steps:['Check tracking — confirm in transit and on track.','Send B2 with tracking and expected delivery date.','If delivered already: switch to SOP-009.'],templates:['B2'],escalate:'No tracking movement 7+ days — open carrier investigation.'},
+  'not-received-after':{title:'SOP-009 — Delivered, not received',steps:['Confirm 4 points: address correct? household received? post office holding? neighbor received?','Send B3 — notify delivery confirmation, ask 4 points.','Open carrier search SAME DAY — do not wait.','Notify: "Investigating — allow 2 business days."','After 2 BD: located → new ETA. Not located → resend or refund.'],templates:['B3','B3-3','B3-4'],escalate:'High-value item — supervisor approval before resend or refund.'},
+  'delayed':{title:'SOP-011 — Delayed parcel',steps:['Assure customer: delay is with carrier, not MSHZ.','Open carrier investigation: UPS 1-800-742-5877 / USPS online / Canada Post 1-866-607-6301.','Send B3-2. "Follow up within 2 business days."','Expedited paid + past date: offer shipping refund.','Located → new ETA. Not located → resend or refund.'],templates:['B3-2'],escalate:'Carrier cannot locate after 5 BD — escalate.'},
+  'listing':{title:'SOP-016 ★ — Listing inaccuracy',steps:['Resolve customer issue first.','Do NOT close without completing Step 3.','Submit listing report to listings team: marketplace+ASIN, customer quote, what listing shows, order ID.','Add internal eDesk note: "Listing report submitted [date]."','Close ONLY after report submitted.'],templates:['Resolution template + internal note'],escalate:'Listings team does not action within 48h — escalate.'},
+  'technical':{title:'SOP-015 — Technical/compatibility',steps:['Ask for: (a) exact item, (b) vehicle year/make/model or device model number.','Check listing page for compatible models.','No info or unsure: use T2 (model known) or T4 (unknown).','⚠ ALL wire harness: use D3, assign to Harleen. Never guess.'],templates:['T2','T4','D3'],escalate:'Always assign wire harness to Harleen — never independently.'},
+  'discount':{title:'SOP-014 — WELCOME15 discount',steps:['Determine why not received: wrong email, not subscribed, or spam.','Wrong email: confirm, provide WELCOME15 manually.','Not subscribed: ask to subscribe or offer to do it with consent.','Spam: ask to check. Not found: provide code.','Order not placed: provide WELCOME15 directly.','Order placed + confirmed subscriber: 15% partial refund.'],templates:['Welcome/discount email'],escalate:'No escalation — agent handles independently.'},
+  'address-not-shipped':{title:'SOP-012 — Address change, not shipped',steps:['Park order in Linnworks immediately.','MINOR (unit, spelling, PO Box): can accommodate.','MAJOR (postal code, house number, street): cannot change. Offer cancellation.','Amazon: policy prevents changes. Offer cancellation.','⚠ CRITICAL: No changes on flagged/fraudulent Shopify orders.'],templates:['B11-A'],escalate:'Fraudulent Shopify order — escalate immediately, do not ship.'},
+  'address-shipped':{title:'SOP-013 — Address change, already shipped',steps:['Notify: address changes not possible after dispatch.','Customer contacts carrier directly with tracking number to request redirect.','Use B11-B.'],templates:['B11-B'],escalate:'No escalation — informational only.'}
+};
+var SUB={
+  'Cancellation request':{q:'Has the item already shipped?',y:'cancel-shipped',n:'cancel-not-shipped',yL:'Yes — already shipped',nL:'No — not yet shipped'},
+  'Damaged / defective item':{q:'How severe is the damage?',y:'damaged-major',n:'damaged-minor',yL:'Complete/major damage',nL:'Minor/partial (scratch, chip, one piece)'},
+  'Wrong item sent':{q:'Is this an FBA order?',y:'wrong-item',n:'wrong-item',yL:'Yes — FBA',nL:'No — seller fulfilled'},
+  'Item not received':{q:'Has the delivery date passed?',y:'not-received-after',n:'not-received-before',yL:'Yes — past delivery date',nL:'No — still before date'},
+  'Delayed parcel':{resolve:'delayed'},
+  'Listing inaccuracy':{resolve:'listing'},
+  'Technical / compatibility':{resolve:'technical'},
+  'Discount / promotion':{resolve:'discount'},
+  'Address change':{q:'Has the item already shipped?',y:'address-shipped',n:'address-not-shipped',yL:'Yes — already shipped',nL:'No — not yet shipped'}
+};
+var WIZ_MKTS=['Amazon USA','Amazon CA','eBay USA','eBay CA','Shopify','Walmart / Other'];
+var WIZ_INQS=['Cancellation request','Damaged / defective item','Wrong item sent','Item not received','Delayed parcel','Listing inaccuracy','Technical / compatibility','Address change','Discount / promotion'];
+DATA_STORE.decision_engine={marketplaces:WIZ_MKTS.slice(),inquiry_types:WIZ_INQS.slice(),sub:JSON.parse(JSON.stringify(SUB)),res:JSON.parse(JSON.stringify(RES))};
+
+function resetWizard(){wMkt='';wInq='';renderWizard(0);}
+function renderWizard(step){
+  var bar=document.getElementById('w-bar'),title=document.getElementById('w-title'),content=document.getElementById('w-content');
+  if(step===0){
+    bar.style.width='33%';title.textContent='Step 1 of 3 — Select marketplace';
+    var opts=WIZ_MKTS;
+    content.innerHTML='<div class="wizard-q">Which marketplace did this inquiry come from?</div>'+opts.map(function(o){return'<button class="wizard-opt'+(wMkt===o?' sel':'')+'" onclick="pickMkt(\''+o+'\')">'+o+'</button>';}).join('');
+  } else if(step===1){
+    bar.style.width='66%';title.textContent='Step 2 of 3 — Select inquiry type';
+    var inqs=WIZ_INQS;
+    content.innerHTML='<div class="wizard-q">What is the customer contacting you about?</div>'+inqs.map(function(o){return'<button class="wizard-opt'+(wInq===o?' sel':'')+'" onclick="pickInq(\''+o+'\')">'+o+'</button>';}).join('');
+  } else if(step===2){
+    bar.style.width='90%';title.textContent='Step 3 of 3 — Clarify the situation';
+    var sub=SUB[wInq];
+    if(!sub){content.innerHTML='<div style="color:var(--t3)">No further clarification needed.</div>';return;}
+    if(sub.resolve){showRes(sub.resolve);return;}
+    content.innerHTML='<div class="wizard-q">'+sub.q+'</div><div style="display:flex;gap:10px"><button class="wizard-opt" style="flex:1;text-align:center" onclick="pickSub(\''+sub.y+'\')">'+sub.yL+'</button><button class="wizard-opt" style="flex:1;text-align:center" onclick="pickSub(\''+sub.n+'\')">'+sub.nL+'</button></div>';
+  }
+}
+function pickMkt(v){wMkt=v;renderWizard(1);}
+function pickInq(v){wInq=v;renderWizard(2);}
+function pickSub(v){showRes(v);}
+
+function showRes(key){
+  var r=RES[key]; if(!r) return;
+  document.getElementById('w-bar').style.width='100%';
+  document.getElementById('w-title').textContent='Resolution — '+r.title;
+  var steps=r.steps.map(function(s,i){var w=s.charAt(0)==='⚠';return'<div class="step-row"><div class="step-num '+(w?'step-num-amber':'step-num-blue')+'">'+(w?'!':i+1)+'</div><div class="step-text">'+(w?s.replace('⚠ ',''):s)+'</div></div>';}).join('');
+  var tmpls=r.templates.map(function(t){return'<button class="tmpl-tag" onclick="jumpTmpl(\''+t+'\')">'+t+'</button>';}).join(' ');
+
+  var html='<div style="display:flex;flex-direction:column;gap:10px">';
+  html+='<div class="res-green"><div class="res-title">'+r.title+'</div>';
+  if(wMkt) html+='<div style="font-size:9px;color:var(--to);margin-bottom:6px">Marketplace: '+wMkt+'</div>';
+  html+=steps+'</div>';
+  html+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:9px;color:var(--t3);font-weight:700">Templates:</span>'+tmpls+'</div>';
+  html+='<div class="res-amber"><div class="res-title">Escalate if:</div><div style="font-size:11px;line-height:1.6;color:var(--tw)">'+r.escalate+'</div></div>';
+
+  // AI suggestion placeholder
+  html+='<div class="ai-box" id="ai-result-box">';
+  html+='<div class="ai-badge">✦ AI Suggestion</div>';
+  html+='<div id="ai-suggestion-content"><div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:4px">Generating AI recommendation...</span></div></div>';
+  html+='</div>';
+
+  html+='<button class="btn-sm" onclick="resetWizard()" style="width:fit-content">← New inquiry</button></div>';
+  document.getElementById('w-content').innerHTML=html;
+
+  // Trigger AI suggestion
+  getAISuggestion(key, r);
+}
+
+function jumpTmpl(code){
+  nav('templates',document.querySelectorAll('.sb-item')[2]);
+  setTimeout(function(){document.querySelectorAll('.tmpl-item').forEach(function(el){if(el.querySelector('.tmpl-code')&&el.querySelector('.tmpl-code').textContent.trim()===code.trim()) el.click();});},100);
+}
+
+// ═══════════════════════════════════════════════════
+// AI INTEGRATION
+// ═══════════════════════════════════════════════════
+function saveAIKey(){
+  var key=document.getElementById('ai-api-key').value.trim();
+  if(!key){document.getElementById('ai-key-status').innerHTML='<span style="color:var(--red)">Please enter an API key.</span>';return;}
+  if(!DATA_STORE.ai_settings) DATA_STORE.ai_settings={};
+  DATA_STORE.ai_settings.key=key;
+  scheduleSave();
+  document.getElementById('ai-key-status').innerHTML='<span style="color:var(--green)">✓ API key saved.</span>';
+}
+
+function testAIKey(){
+  var key=document.getElementById('ai-api-key').value.trim()||load('ai_key','');
+  if(!key){document.getElementById('ai-key-status').innerHTML='<span style="color:var(--red)">No API key found.</span>';return;}
+  document.getElementById('ai-key-status').innerHTML='<span style="color:var(--ti)">Testing...</span>';
+  fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'gpt-4o-mini',max_tokens:10,messages:[{role:'user',content:'Say OK'}]})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.error) document.getElementById('ai-key-status').innerHTML='<span style="color:var(--red)">✗ '+d.error.message+'</span>';
+    else document.getElementById('ai-key-status').innerHTML='<span style="color:var(--green)">✓ API key is valid! Connection successful.</span>';
+  }).catch(function(e){
+    document.getElementById('ai-key-status').innerHTML='<span style="color:var(--red)">✗ Network error: '+e.message+'</span>';
+  });
+}
+
+function saveAISettings(){
+  captureAISettings();
+  scheduleSave();
+  document.getElementById('ai-save-status').innerHTML='<span style="color:var(--green)">✓ All AI settings saved' + (FILE_HANDLE ? ' to file.' : ' (in memory — connect a file to persist).') + '</span>';
+  setTimeout(function(){document.getElementById('ai-save-status').innerHTML='';},4000);
+}
+
+function loadAISettings(){
+  if(DATA_STORE.ai_settings){
+    if(DATA_STORE.ai_settings.key) document.getElementById('ai-api-key').value=DATA_STORE.ai_settings.key;
+    if(DATA_STORE.ai_settings.model) document.getElementById('ai-model').value=DATA_STORE.ai_settings.model;
+    if(DATA_STORE.ai_settings.system_prompt) document.getElementById('ai-system-prompt').value=DATA_STORE.ai_settings.system_prompt;
+    if(DATA_STORE.ai_settings.policy_context) document.getElementById('ai-policy-context').value=DATA_STORE.ai_settings.policy_context;
+  }
+}
+
+function getAISuggestion(key, resolution){
+  var apiKey = (DATA_STORE.ai_settings && DATA_STORE.ai_settings.key) ? DATA_STORE.ai_settings.key : '';
+  var el=document.getElementById('ai-suggestion-content');
+  if(!apiKey){
+    el.innerHTML='<div style="font-size:11px;color:var(--t3)">No OpenAI API key configured. Go to <strong>AI Settings</strong> to add your key and enable AI suggestions.</div>';
+    return;
+  }
+  var model = (DATA_STORE.ai_settings && DATA_STORE.ai_settings.model) ? DATA_STORE.ai_settings.model : 'gpt-4o-mini';
+  var systemPrompt=document.getElementById('ai-system-prompt').value || 'You are a customer service advisor for MSHZ International.';
+  var policyContext=document.getElementById('ai-policy-context').value || '';
+
+  var userMsg='SITUATION:\n';
+  userMsg+='Marketplace: '+(wMkt||'Not specified')+'\n';
+  userMsg+='Inquiry type: '+(wInq||'Not specified')+'\n';
+  userMsg+='SOP selected: '+resolution.title+'\n\n';
+  userMsg+='HARD-CODED SOP STEPS:\n';
+  resolution.steps.forEach(function(s,i){userMsg+=(i+1)+'. '+s+'\n';});
+  userMsg+='\nTemplates to use: '+resolution.templates.join(', ')+'\n';
+  userMsg+='Escalate if: '+resolution.escalate+'\n\n';
+  userMsg+='Based on the above situation and our company policies, provide your AI recommendation. Include any additional considerations, edge cases to watch for, or tips the agent should keep in mind. Keep it concise and actionable.';
+
+  var messages=[
+    {role:'system',content:systemPrompt+'\n\nCOMPANY POLICY REFERENCE:\n'+policyContext},
+    {role:'user',content:userMsg}
+  ];
+
+  fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({model:model,max_tokens:600,temperature:0.3,messages:messages})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.error){
+      el.innerHTML='<div style="font-size:11px;color:var(--te)">AI Error: '+d.error.message+'</div>';
+    } else if(d.choices && d.choices[0]){
+      el.innerHTML='<div class="ai-suggestion">'+d.choices[0].message.content.replace(/\n/g,'<br>')+'</div>';
+    } else {
+      el.innerHTML='<div style="font-size:11px;color:var(--t3)">No AI response received.</div>';
+    }
+  }).catch(function(e){
+    el.innerHTML='<div style="font-size:11px;color:var(--te)">Network error: '+e.message+'</div>';
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// QUICK SEARCH
+// ═══════════════════════════════════════════════════
+var SIDX=[
+  {k:'damaged broken leak major',t:'SOP-003 — Major damaged item',d:'Complete/major damage. Carrier vs pre-shipment fault.',r:'damaged-major'},
+  {k:'scratch chip minor partial dent',t:'SOP-004 — Minor damaged item',d:'Scratch, chip, dent. Offer 10% discount first.',r:'damaged-minor'},
+  {k:'wrong item incorrect different',t:'SOP-006 — Wrong item sent',d:'Customer received different item. MSHZ pays all costs.',r:'wrong-item'},
+  {k:'not received delivered missing',t:'SOP-009 — Delivered, not received',d:'Tracking shows delivered. Confirm 4 points.',r:'not-received-after'},
+  {k:'not received before transit',t:'SOP-008 — In transit before delivery date',d:'Customer contacting before expected delivery date.',r:'not-received-before'},
+  {k:'delayed delay late carrier',t:'SOP-011 — Delayed parcel',d:'Shipped on time but delayed by carrier.',r:'delayed'},
+  {k:'cancel not shipped label',t:'SOP-001 — Cancel, not yet shipped',d:'Customer wants to cancel before shipping.',r:'cancel-not-shipped'},
+  {k:'cancel shipped dispatched',t:'SOP-002 — Cancel, already shipped',d:'Item already dispatched — cannot cancel.',r:'cancel-shipped'},
+  {k:'listing inaccurate description photo quantity',t:'SOP-016 ★ — Listing inaccuracy',d:'Customer says listing was wrong.',r:'listing'},
+  {k:'technical xtenzi wire harness compatibility',t:'SOP-015 — Technical/compatibility',d:'Technical question. Wire harness → Harleen.',r:'technical'},
+  {k:'discount welcome code 15',t:'SOP-014 — WELCOME15 discount',d:'Customer did not receive discount code.',r:'discount'},
+  {k:'address change not shipped',t:'SOP-012 — Address change, not shipped',d:'Address change before dispatch.',r:'address-not-shipped'},
+  {k:'address change shipped',t:'SOP-013 — Address change, already shipped',d:'Item dispatched — address cannot change.',r:'address-shipped'}
+];
+
+function doSearch(v){
+  var q=v.toLowerCase().trim(), res=document.getElementById('search-results');
+  if(!q){res.innerHTML='';return;}
+  var hits=SIDX.filter(function(s){return s.k.includes(q)||s.t.toLowerCase().includes(q)||s.d.toLowerCase().includes(q);});
+  if(!hits.length){res.innerHTML='<div style="font-size:10px;color:var(--t3);padding:8px">No results. Try: damaged, wrong item, not received, cancel, delayed, listing, technical, discount, address.</div>';return;}
+  res.innerHTML=hits.map(function(h){return'<div class="search-item" onclick="showSRes(\''+h.r+'\')"><div class="search-item-title">'+h.t+'</div><div class="search-item-desc">'+h.d+'</div></div>';}).join('');
+}
+
+function showSRes(key){
+  var container=document.getElementById('search-results');
+  container.innerHTML='<button class="btn-sm" onclick="document.getElementById(\'sop-input\').value=\'\';doSearch(\'\');" style="margin-bottom:8px">← Back</button>';
+  var r=RES[key]; if(!r) return;
+  var steps=r.steps.map(function(s,i){var w=s.charAt(0)==='⚠';return'<div class="step-row"><div class="step-num '+(w?'step-num-amber':'step-num-blue')+'">'+(w?'!':i+1)+'</div><div class="step-text">'+(w?s.replace('⚠ ',''):s)+'</div></div>';}).join('');
+  var el=document.createElement('div');
+  el.style.cssText='display:flex;flex-direction:column;gap:10px;margin-top:8px';
+  el.innerHTML='<div class="res-green"><div class="res-title">'+r.title+'</div>'+steps+'</div><div class="res-amber"><div class="res-title">Escalate if:</div><div style="font-size:11px;color:var(--tw);line-height:1.6">'+r.escalate+'</div></div>';
+  container.appendChild(el);
+}
+
+// ═══════════════════════════════════════════════════
+// POLICY DATA
+// ═══════════════════════════════════════════════════
+var POLS=[
+  {id:'refund-rules',cat:'refund',t:'Refund processing rules',s:'9 core rules — all marketplaces'},
+  {id:'return-codes',cat:'refund',t:'Return reason codes 1–72',s:'Fault table — seller vs. customer'},
+  {id:'amazon-msg',cat:'amazon',t:'Amazon prohibited messaging',s:'DO NOT violate — suspension risk'},
+  {id:'amazon-health',cat:'amazon',t:'Amazon account health thresholds',s:'ODR, OTDR, response time rules'},
+  {id:'carrier-contacts',cat:'carrier',t:'Carrier contacts & claim steps',s:'USPS, UPS, Canada Post, FedEx'},
+  {id:'return-shipping',cat:'carrier',t:'Return shipping cost table',s:'US estimates by weight'},
+  {id:'kpi-targets',cat:'kpi',t:'KPI targets & performance',s:'Response time, ODR, benchmarks'},
+  {id:'qa-scorecard',cat:'kpi',t:'QA scorecard — 5 dimensions',s:'Pass = 75/100'},
+  {id:'cat-alerts',cat:'kpi',t:'High-risk product categories',s:'Kitchen, Luggage, Electronics'},
+  {id:'conduct',cat:'conduct',t:'Agent conduct — 9 principles',s:'Non-negotiable standards'},
+  {id:'escalation-rules',cat:'conduct',t:'Escalation rules',s:'When to involve supervisor'},
+  {id:'follow-up-cadence',cat:'conduct',t:'Follow-up cadence policy',s:'Mandatory schedule'},
+  {id:'listing-protocol',cat:'conduct',t:'Listing inaccuracy protocol',s:'SOP-016 — mandatory every time'}
+];
+
+var PC={
+'refund-rules':'<div class="pol-section">Refund Processing — 9 Core Rules</div><div class="alert-red" style="margin-bottom:10px">v2: Return request response is 48 HOURS — not 2 business days.</div>'+[['R-1','Return request: 48 HOURS max. A-Z without 48h response = Amazon auto-grants claim.','Amazon USA & CA'],['R-2','Message response: 24h, 7 days/week including weekends.','Amazon USA & CA'],['R-3','Wrong/damaged by MSHZ: full refund, zero deductions.','All marketplaces'],['R-4','Customer-fault return: deduct return shipping from refund.','All marketplaces'],['R-5','Issue refund after return received — unless returnless.','All marketplaces'],['R-6','Returnless refund: issue immediately, customer keeps item.','All marketplaces'],['R-7','Do NOT resend a completely different item.','All marketplaces'],['R-8','Refund within 2 BD of receiving return.','Amazon USA & CA']].map(function(r){return'<div class="rule-row"><div class="rule-num">'+r[0]+'</div><div><div class="rule-text">'+r[1]+'</div><div class="rule-note">'+r[2]+'</div></div></div>';}).join(''),
+'return-codes':'<div class="pol-section">Return Reason Codes</div><div class="alert-blue" style="margin-bottom:10px">Yellow = seller fault (MSHZ pays). White = customer fault.</div><table class="data-table"><thead><tr><th>#</th><th>Reason</th><th>Fault</th></tr></thead><tbody>'+[[1,'Other reason','C'],[2,'Accidental order','C'],[3,'Better price','C'],[6,'Damaged poor packaging','S'],[7,'Arrived too late','S'],[8,'Missing parts','S'],[9,'Damaged in shipping','S'],[10,'Different from ordered','S'],[11,'Defective','S'],[13,"Don't want it",'C'],[17,'Item was defective','S'],[18,'Description inaccurate','S'],[19,'Not satisfied — quality','S'],[21,'No longer needed','C'],[28,'Wrong item sent','S'],[32,'Damaged on arrival','S'],[37,'Different from website','S'],[42,'Dead battery','S']].map(function(r){var s=r[2]==='S';return'<tr class="'+(s?'seller-fault':'')+'"><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+(s?'pill-amber':'pill-gray')+'">'+(s?'Seller':'Customer')+'</span></td></tr>';}).join('')+'</tbody></table>',
+'amazon-msg':'<div class="pol-section">Amazon Prohibited Messaging</div><div class="alert-red" style="margin-bottom:10px">Violations risk suspension. Every agent must know these rules.</div>'+[['1','Do NOT use [Important] in subject unless genuinely required.','Warning'],['2','Do NOT send marketing content.','Suspension risk'],['3 ⚠','Do NOT incentivize or manipulate reviews in any way.','IMMEDIATE suspension'],['4','Do NOT ask for the same review more than once.','Warning'],['5','Do NOT include links not necessary to complete the order.','Message blocked']].map(function(r){var w=r[0].includes('⚠');return'<div class="rule-row"><div class="rule-num" style="'+(w?'background:var(--be);color:var(--te)':'')+'">'+r[0]+'</div><div><div class="rule-text" style="'+(w?'font-weight:700':'')+'">'+r[1]+'</div><div class="rule-note" style="'+(w?'color:var(--red)':'')+'">'+r[2]+'</div></div></div>';}).join(''),
+'amazon-health':'<div class="pol-section">Amazon Account Health</div><div class="alert-red" style="margin-bottom:10px">ODR above 1% = suspension risk + loss of Buy Box up to 60 days.</div>'+[['ODR','Below 1% (target 0.5%). Includes: negative feedback, A-Z claims, chargebacks.','alert'],['MSG','Above 95% within 24h — 7 days/week.',''],['RTN','100% within 48h. A-Z without 48h response = auto-grant.','alert'],['BCR','Currently 2.14% — benchmark 1.63%. Driven by listing errors.','warn'],['BDR','Currently 14.29% — benchmark 6.47%. Priority action area.','alert']].map(function(r){return'<div class="rule-row"><div class="rule-num" style="'+(r[2]==='alert'?'background:var(--be);color:var(--te)':r[2]==='warn'?'background:var(--bw);color:var(--tw)':'')+'">'+r[0]+'</div><div class="rule-text">'+r[1]+'</div></div>';}).join(''),
+'carrier-contacts':'<div class="pol-section">Carrier Contacts</div><table class="data-table"><thead><tr><th>Carrier</th><th>Region</th><th>Contact</th><th>Min Wait</th></tr></thead><tbody>'+[['USPS','USA','usps.com/help/claims.htm','7 days'],['UPS','USA & CA','1-800-742-5877','5 BD'],['Canada Post','CA','1-866-607-6301','5 BD'],['Stallion','CA','stallionexpress.ca/support','3 BD'],['ChitChats','CA','chitchats.com','3 BD'],['FedEx','USA','1-800-463-3339','5 BD']].map(function(r){return'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td style="font-size:10px">'+r[2]+'</td><td><span class="pill pill-amber">'+r[3]+'</span></td></tr>';}).join('')+'</tbody></table>',
+'return-shipping':'<div class="pol-section">US Return Shipping Estimates</div><table class="data-table"><thead><tr><th>Weight</th><th>Est. Cost</th><th>Carrier</th></tr></thead><tbody>'+[['1–15 oz','$3.66','USPS'],['15 oz–1 lb','$4.79','UPS'],['1–2 lbs','$5.11','UPS'],['2–5 lbs','$5.39–$5.69','UPS'],['5–10 lbs','$5.87–$6.79','UPS'],['10–20 lbs','$7.00–$9.64','UPS'],['20–33 lbs','$10.00–$13.99','UPS']].map(function(r){return'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>';}).join('')+'</tbody></table>',
+'kpi-targets':'<div class="pol-section">KPI Targets vs. Current Performance</div>'+[['Response time','Under 24h, 7 days/week','3.09h avg','good'],['Return request','48h max — zero exceptions','Critical','alert'],['ODR','Below 1%','Below 1% — monitor','alert'],['Buyer contact rate','Below 1.63%','Currently 2.14%','warn'],['Dissatisfaction','Below 6.47%','Currently 14.29%','alert'],['365-day positive','Above 90%','Currently 80%','warn'],['QA score','75/100 to pass','Team avg: 82','good']].map(function(r){var c=r[3]==='good'?'pill-green':r[3]==='alert'?'pill-red':'pill-amber';return'<div class="rule-row"><div style="flex:1"><div class="rule-text">'+r[0]+'</div><div class="rule-note">Target: '+r[1]+' · Current: '+r[2]+'</div></div><span class="pill '+c+'">'+(r[3]==='good'?'On track':r[3]==='alert'?'Action needed':'Monitor')+'</span></div>';}).join(''),
+'qa-scorecard':'<div class="pol-section">QA Scorecard — 5 Dimensions · Pass = 75/100</div>'+[['Tone & professionalism','Professional, empathetic, personalized.','Generic/copy-paste replies.'],['Accuracy','Correct SOP, fault, return code.','Wrong return code or fault.'],['SOP adherence','All steps completed. SOP-016 filed.','Skipping steps or carrier claim.'],['Response time','First reply 24h. Return 48h.','Overnight without acknowledgement.'],['Resolution quality','Fully resolved, clear notes.','Closing before customer confirms.']].map(function(d,i){return'<div class="rule-row"><div class="rule-num">'+(i+1)*20+'</div><div><div class="rule-text" style="font-weight:700">'+d[0]+'</div><div class="rule-note">Evaluated: '+d[1]+'</div><div class="rule-note" style="color:var(--red)">Failures: '+d[2]+'</div></div></div>';}).join('')+'<div class="alert-green" style="margin-top:8px">75–100 = pass · 60–74 = coaching · Below 60 = improvement plan</div>',
+'cat-alerts':'<div class="pol-section">High-Risk Product Categories</div><div class="alert-blue" style="margin-bottom:10px">2–5× the overall refund rate (0.059%). Flag patterns to supervisor.</div>'+[['Kitchen','0.30%','5× avg','HIGH','Fragile — breakage in transit. Always ask if box damaged.'],['Tools','0.20%','3× avg','HIGH','Compatibility issues. Ask questions before resolving.'],['Luggage','0.20%','3× avg','HIGH','Large items, damage in transit. Flag multiple reports.'],['Electronics','0.17%','3× avg','HIGH','Wrong specs — check listing accuracy on every return.'],['Home','0.14%','2× avg','MED','Mix of fragile and description issues.'],['PC/Computers','0.14%','2× avg','MED','Spec mismatch. Assign to Harleen.'],['Beauty','0.10%','1.7× avg','MED','Leaking bottles — ask if leaked before or after opening.']].map(function(r){return'<div class="rule-row"><div style="flex:1"><div class="rule-text" style="font-weight:700">'+r[0]+' <span style="font-size:9px;font-weight:400;color:var(--t3)">'+r[1]+' — '+r[2]+'</span></div><div class="rule-note">'+r[4]+'</div></div><span class="pill '+(r[3]==='HIGH'?'pill-red':'pill-amber')+'">'+r[3]+'</span></div>';}).join(''),
+'conduct':'<div class="pol-section">9 Core Conduct Principles</div>'+[['1','Get organized — track all conversations, document every action.'],['2','Read the entire thread before replying — every time.'],['3','Every reply must move the ticket forward — no filler messages.'],['4','Personalize every interaction — name, order ID, specific situation.'],['5','Response time: 24h or less — 7 days a week including weekends.'],['6','Do not take hostile customers personally — escalate if needed.'],['7','Underpromise, overdeliver — never give ETA without confirming.'],['8','Customer is always right — resolve, do not debate.'],['9','Document every action before closing — clear note on every ticket.']].map(function(r){return'<div class="rule-row"><div class="rule-num">'+r[0]+'</div><div class="rule-text">'+r[1]+'</div></div>';}).join(''),
+'escalation-rules':'<div class="pol-section">Escalation Rules</div><div class="alert-red" style="margin-bottom:10px">A-Z claims count directly against ODR. Notify supervisor within 1 hour.</div>'+[['Listing inaccuracy','Resolve customer first. Submit listing report same day before closing.','Same day'],['Refund > $40','Do not process. Escalate before communicating.','Same day'],['FBA wrong item','STOP. Escalate BEFORE acting.','Immediately'],['A-Z claim filed','Notify supervisor within 1 hour. Respond within 48h.','1 hour'],['Technical/Xtenzi','Assign to Harleen. Never answer independently.','Same day']].map(function(r){return'<div class="rule-row"><div style="flex:1"><div class="rule-text" style="font-weight:700">'+r[0]+'</div><div class="rule-note">'+r[1]+' · Timing: '+r[2]+'</div></div></div>';}).join(''),
+'follow-up-cadence':'<div class="pol-section">Follow-up Cadence Policy</div><div class="alert-amber" style="margin-bottom:10px">Every ticket must follow this cadence. No exceptions.</div>'+[['Day 0','Send reply. Move ticket to Waiting tab. Start timer.'],['Day 1','No action — allow 1 full business day for customer reply.'],['Day 2','First follow-up. Check if issue resolved.'],['Day 3','Final follow-up. Warn ticket will be closed if no response.'],['No reply','Close with D6. Mark ticket Inactive. Document all attempts.']].map(function(r){return'<div class="rule-row"><div class="rule-num">'+r[0]+'</div><div class="rule-text">'+r[1]+'</div></div>';}).join(''),
+'listing-protocol':'<div class="pol-section">Listing Inaccuracy Protocol — SOP-016</div><div class="alert-red" style="margin-bottom:10px">★ This SOP is MANDATORY. Never close a listing inaccuracy ticket without submitting a report.</div>'+[['1','Resolve the customer\'s immediate issue first (refund, resend, etc.).'],['2','Do NOT close the ticket without completing Step 3.'],['3','Submit listing report to listings team with: marketplace, ASIN, customer quote, what listing shows, order ID.'],['4','Add internal eDesk note: "Listing report submitted [date]."'],['5','Close ONLY after the report has been submitted.']].map(function(r){return'<div class="rule-row"><div class="rule-num">'+r[0]+'</div><div class="rule-text">'+r[1]+'</div></div>';}).join('')
+};
+
+var polCat='all';
+function buildPol(cat,q){
+  cat=cat||polCat; q=(q||'').toLowerCase();
+  var items=POLS.filter(function(p){return(cat==='all'||p.cat===cat)&&(!q||p.t.toLowerCase().includes(q)||p.s.toLowerCase().includes(q));});
+  document.getElementById('pol-list').innerHTML=items.map(function(p){return'<div class="pol-item" id="pi-'+p.id+'" onclick="selPol(\''+p.id+'\')"><div class="pol-item-title">'+p.t+'</div><div class="pol-item-sub">'+p.s+'</div></div>';}).join('');
+  if(items.length) selPol(items[0].id);
+}
+function selPol(id){
+  document.querySelectorAll('.pol-item').forEach(function(el){el.classList.remove('sel');});
+  var el=document.getElementById('pi-'+id); if(el) el.classList.add('sel');
+  document.getElementById('pol-detail').innerHTML=PC[id]||'<div style="color:var(--t3)">Coming soon.</div>';
+}
+function fCat(cat,el){polCat=cat;document.querySelectorAll('#p-policy .chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');buildPol(cat);}
+function fPol(v){buildPol(polCat,v);}
+
+// ═══════════════════════════════════════════════════
+// TEMPLATES
+// ═══════════════════════════════════════════════════
+var TMPLS=[
+  {code:'A2',s:'a',name:'Received damaged or defective item',when:'Customer reports damage — NO return request opened yet.',sop:'SOP-003,004,005',vars:['customer_name','order_id','item_name'],donot:'Return request already open — use A3.',body:'Hi {{customer_name}},\n\nWe\'re sorry to hear your order arrived in less than perfect condition.\n\nCould you help us with a few quick questions?\n1. What exactly was damaged?\n2. Was the entire item damaged, or just part of it?\n3. Was the outer box also damaged, or only the product inside?\n\nThank you,\nMSHZ Customer Service'},
+  {code:'A3',s:'a',name:'Received damaged (return request open)',when:'Damage reported AND return request already opened.',sop:'SOP-003,004',vars:['customer_name','order_id','item_name'],donot:'No return request — use A2.',body:'Hi {{customer_name}},\n\nWe can see you have opened a return request for order {{order_id}} regarding {{item_name}}.\n\n1. What was damaged?\n2. Would you prefer a replacement or a full refund?\n\nMSHZ Customer Service'},
+  {code:'B2',s:'b',name:"Where's my item (before delivery date)",when:'Customer contacts before expected delivery date.',sop:'SOP-008',vars:['customer_name','order_id','tracking_number','expected_delivery_date','carrier'],donot:'Delivery date passed — use B3.',body:'Hi {{customer_name}},\n\nYour order {{order_id}} is on its way!\nCarrier: {{carrier}}\nTracking: {{tracking_number}}\nExpected: {{expected_delivery_date}}\n\nPlease allow until the expected date.\n\nMSHZ Customer Service'},
+  {code:'B3',s:'b',name:"Where's my item (delivered, not received)",when:'Tracking shows delivered but customer says not received.',sop:'SOP-009',vars:['customer_name','order_id','delivery_date','delivery_address'],donot:'Still in transit — use B2.',body:'Hi {{customer_name}},\n\nOur records show order {{order_id}} was delivered on {{delivery_date}} to {{delivery_address}}.\n\nCould you confirm:\n1. Is the address correct?\n2. Has anyone else in your household received it?\n3. Is your post office possibly holding it?\n4. Could a neighbor have received it?\n\nMSHZ Customer Service'},
+  {code:'B3-2',s:'b',name:"Where's my item — carrier delay",when:'Item shipped on time but delayed by carrier.',sop:'SOP-011',vars:['customer_name','order_id','tracking_number','carrier'],donot:'Item lost — use B3-3 or B3-4.',body:'Hi {{customer_name}},\n\nYour order {{order_id}} is in transit with {{carrier}} (tracking: {{tracking_number}}).\n\nWe have opened a carrier investigation and will follow up within 2 business days.\n\nMSHZ Customer Service'},
+  {code:'B3-3',s:'b',name:'Delivered, not received — resend',when:'4 points confirmed, not received, wants resend.',sop:'SOP-009',vars:['customer_name','order_id','carrier_case_number'],donot:'Customer wants refund — use B3-4.',body:'Hi {{customer_name}},\n\nWe have opened a carrier search (case: {{carrier_case_number}}) for order {{order_id}}.\n\nWe will follow up in 2 business days. If the carrier cannot locate your package, we will send a replacement.\n\nMSHZ Customer Service'},
+  {code:'B3-4',s:'b',name:'Delivered, not received — refund',when:'4 points confirmed, not received, wants refund.',sop:'SOP-009',vars:['customer_name','order_id','carrier_case_number','refund_amount'],donot:'Customer wants resend — use B3-3.',body:'Hi {{customer_name}},\n\nWe have opened carrier investigation (case: {{carrier_case_number}}) for order {{order_id}}.\n\nWe will process a full refund of {{refund_amount}} within 2 business days.\n\nMSHZ Customer Service'},
+  {code:'B7',s:'b',name:'Resend confirmation',when:'Resend has shipped.',sop:'SOP-003,006,009',vars:['customer_name','order_id','new_tracking_number','carrier','estimated_delivery_date'],donot:'Resend not yet shipped — wait for tracking.',body:'Hi {{customer_name}},\n\nGreat news! We have shipped a replacement for order {{order_id}}.\n\nCarrier: {{carrier}}\nTracking: {{new_tracking_number}}\nEstimated delivery: {{estimated_delivery_date}}\n\nMSHZ Customer Service'},
+  {code:'B11-A',s:'b',name:'Address change — major, not shipped',when:'Major address change, item not yet shipped.',sop:'SOP-012',vars:['customer_name','order_id','original_address'],donot:'Minor change — accommodate directly.',body:'Hi {{customer_name}},\n\nUnfortunately we cannot change the address on order {{order_id}} once placed (marketplace policy). Current address: {{original_address}}.\n\nOptions:\n1. Cancel and reorder with correct address.\n2. Proceed if you can retrieve at original address.\n\nMSHZ Customer Service'},
+  {code:'B11-B',s:'b',name:'Address change — already shipped',when:'Address change requested after dispatch.',sop:'SOP-013',vars:['customer_name','order_id','carrier','tracking_number'],donot:'Not yet shipped — use B11-A.',body:'Hi {{customer_name}},\n\nAddress changes cannot be made after dispatch for order {{order_id}}.\n\nPlease contact {{carrier}} directly with tracking {{tracking_number}} to request a redirect.\n\nMSHZ Customer Service'},
+  {code:'C8',s:'c',name:'Negative feedback — problem not specified',when:'Negative feedback received, reason unclear.',sop:'Feedback section 06',vars:['customer_name','order_id'],donot:'Reason is clear — use specific template.',body:'Hi {{customer_name}},\n\nWe noticed your feedback on order {{order_id}} and are sorry you were not completely satisfied.\n\nCould you share more details so we can find the best resolution?\n\nMSHZ Customer Service'},
+  {code:'D3',s:'d',name:'Consult tech team (Xtenzi)',when:'Technical compatibility — cannot answer from listing.',sop:'SOP-015',vars:['customer_name','order_id','item_name'],donot:'Answer is on listing page — answer directly.',body:'Hi {{customer_name}},\n\nThank you for your question about {{item_name}} (order {{order_id}}).\n\nOur technical team is reviewing your compatibility inquiry and will follow up within 24 hours.\n\nMSHZ Customer Service'},
+  {code:'D6',s:'d',name:'Inactive ticket close',when:'No reply after 3 follow-ups.',sop:'Follow-up cadence section 09',vars:['customer_name','order_id'],donot:'Customer replied — never close active.',body:'Hi {{customer_name}},\n\nWe have reached out a few times regarding order {{order_id}} but have not heard back.\n\nWe will close this inquiry for now. Please reach out anytime if you still need help.\n\nMSHZ Customer Service'},
+  {code:'T2',s:'t',name:'Xtenzi — compatible? (model known)',when:'Customer provided vehicle/device model number.',sop:'SOP-015',vars:['customer_name','order_id','item_name','customer_model'],donot:'Model not provided — use T4.',body:'Hi {{customer_name}},\n\nThank you for your model details for {{item_name}} (order {{order_id}}).\n\nWe have checked compatibility for {{customer_model}} and [CONFIRM RESULT HERE before sending].\n\nMSHZ Customer Service'},
+  {code:'T4',s:'t',name:'Xtenzi — compatible? (model unknown)',when:'Compatibility question, no model number.',sop:'SOP-015',vars:['customer_name','order_id','item_name'],donot:'Customer gave model — use T2.',body:'Hi {{customer_name}},\n\nTo confirm compatibility for {{item_name}} (order {{order_id}}), could you provide:\n1. Vehicle year, make, and model\n   OR\n2. Device model number\n\nMSHZ Customer Service'}
+];
+
+var tSer='all', tQ='';
+function buildTmpl(){
+  var items=TMPLS.filter(function(t){return(tSer==='all'||t.s===tSer)&&(!tQ||t.name.toLowerCase().includes(tQ)||t.code.toLowerCase().includes(tQ)||t.when.toLowerCase().includes(tQ));});
+  document.getElementById('tmpl-list').innerHTML=items.map(function(t){return'<div class="tmpl-item" id="ti-'+t.code+'" onclick="selTmpl(\''+t.code+'\')"><div class="tmpl-code">'+t.code+'</div><div><div class="tmpl-name">'+t.name+'</div><div class="tmpl-when">'+t.when.substring(0,52)+'...</div></div></div>';}).join('');
+  if(items.length) selTmpl(items[0].code);
+}
+function selTmpl(code){
+  document.querySelectorAll('.tmpl-item').forEach(function(el){el.classList.remove('sel');});
+  var el=document.getElementById('ti-'+code); if(el) el.classList.add('sel');
+  var t=TMPLS.find(function(x){return x.code===code;}); if(!t) return;
+  var vars=t.vars.map(function(v){return'<span class="tmpl-var">{{'+v+'}}</span>';}).join(' ');
+  document.getElementById('tmpl-pane').innerHTML=
+    '<div><div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:3px">'+t.code+' — '+t.name+'</div><div style="font-size:10px;color:var(--t3)">SOP: '+t.sop+'</div></div>'+
+    '<div class="field" style="margin-top:10px"><div class="field-label">When to use</div><div style="font-size:11px;color:var(--t1);line-height:1.6">'+t.when+'</div></div>'+
+    '<div class="alert-red" style="margin-top:8px"><strong>Do NOT use if:</strong> '+t.donot+'</div>'+
+    '<div class="field" style="margin-top:8px"><div class="field-label">Required Variables</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+vars+'</div></div>'+
+    '<div class="field" style="margin-top:8px"><div class="field-label">Template Preview</div><div class="tmpl-preview">'+esc(t.body)+'</div></div>'+
+    '<button class="btn-primary" onclick="cpTmpl(\''+code+'\')" style="margin-top:10px">Copy Template</button>';
+}
+function fTS(s,el){tSer=s;document.querySelectorAll('#p-templates .chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');buildTmpl();}
+function fTmpl(v){tQ=v.toLowerCase();buildTmpl();}
+function cpTmpl(code){var t=TMPLS.find(function(x){return x.code===code;});if(t&&navigator.clipboard)navigator.clipboard.writeText(t.body).then(function(){alert('Template '+code+' copied!');});}
+
+// ═══════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════
+var ADMIN_PIN = DATA_STORE.admin_pin || '1234';
+var ADMIN_DATA={
+  sops: DATA_STORE.sops,
+  kpis: DATA_STORE.kpis,
+  conduct: DATA_STORE.conduct,
+  carriers: DATA_STORE.carriers,
+  decision_engine: DATA_STORE.decision_engine
+};
+
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function checkPin(val){
+  if(val.length<4) return;
+  if(val===ADMIN_PIN){
+    document.getElementById('admin-lock').style.display='none';
+    document.getElementById('admin-content').style.display='flex';
+    document.getElementById('pin-input').value='';
+    document.getElementById('pin-error').style.display='none';
+    loadAdminEditors();
+  } else if(val.length===4){
+    document.getElementById('pin-error').style.display='block';
+    document.getElementById('pin-input').value='';
+    setTimeout(function(){document.getElementById('pin-error').style.display='none';},2000);
+  }
+}
+function lockAdmin(){
+  document.getElementById('admin-lock').style.display='flex';
+  document.getElementById('admin-content').style.display='none';
+  nav('decision',document.querySelector('.sb-item'));
+}
+function changePIN(){
+  var cur=document.getElementById('pin-current').value;
+  var nw=document.getElementById('pin-new').value;
+  var cnf=document.getElementById('pin-confirm').value;
+  var msg=document.getElementById('pin-change-msg');
+  if(cur!==ADMIN_PIN){msg.textContent='Current PIN incorrect.';msg.style.color='var(--red)';return;}
+  if(nw.length!==4||isNaN(nw)){msg.textContent='New PIN must be 4 digits.';msg.style.color='var(--red)';return;}
+  if(nw!==cnf){msg.textContent='PINs do not match.';msg.style.color='var(--red)';return;}
+  ADMIN_PIN=nw; DATA_STORE.admin_pin=nw; scheduleSave();
+  msg.textContent='PIN updated successfully.'; msg.style.color='var(--green)';
+  document.getElementById('pin-current').value='';
+  document.getElementById('pin-new').value='';
+  document.getElementById('pin-confirm').value='';
+}
+function swAdmin(tab,el){
+  document.querySelectorAll('.admin-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.admin-panel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('admin-'+tab).classList.add('active');
+}
+function loadAdminEditors(){renderSOPs();renderKPIs();renderConduct();renderCarriers();renderDE();}
+
+function renderSOPs(){
+  document.getElementById('sop-editor-list').innerHTML=ADMIN_DATA.sops.map(function(s,i){
+    return'<div class="editor-block"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="pill pill-blue">'+s.id+'</span><input type="text" value="'+esc(s.title)+'" onchange="ADMIN_DATA.sops['+i+'].title=this.value" style="flex:1;font-weight:700"><button class="btn-sm btn-danger" onclick="delSOP('+i+')">Remove</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field"><div class="field-label">Trigger</div><input type="text" value="'+esc(s.trigger)+'" onchange="ADMIN_DATA.sops['+i+'].trigger=this.value"></div><div class="field"><div class="field-label">Templates</div><input type="text" value="'+esc(s.templates)+'" onchange="ADMIN_DATA.sops['+i+'].templates=this.value"></div></div><div class="field" style="margin-top:6px"><div class="field-label">Steps (one per line)</div><textarea rows="4" onchange="ADMIN_DATA.sops['+i+'].steps=this.value">'+esc(s.steps)+'</textarea></div><div class="field"><div class="field-label">Escalate if</div><input type="text" value="'+esc(s.escalate)+'" onchange="ADMIN_DATA.sops['+i+'].escalate=this.value"></div></div>';
+  }).join('');
+}
+function addSOP(){ADMIN_DATA.sops.push({id:'SOP-NEW',title:'New SOP',trigger:'',steps:'1. \n2. \n3. ',templates:'',escalate:''});renderSOPs();}
+function delSOP(i){if(confirm('Remove this SOP?')){ADMIN_DATA.sops.splice(i,1);renderSOPs();}}
+
+function renderKPIs(){
+  document.getElementById('kpi-editor-list').innerHTML=ADMIN_DATA.kpis.map(function(k,i){
+    return'<div class="editor-row"><div class="field"><div class="field-label">Metric</div><input type="text" value="'+esc(k.metric)+'" onchange="ADMIN_DATA.kpis['+i+'].metric=this.value"></div><div class="field"><div class="field-label">Target</div><input type="text" value="'+esc(k.target)+'" onchange="ADMIN_DATA.kpis['+i+'].target=this.value"></div><div class="field"><div class="field-label">Status</div><select onchange="ADMIN_DATA.kpis['+i+'].status=this.value"><option value="good"'+(k.status==='good'?' selected':'')+'>Good</option><option value="warn"'+(k.status==='warn'?' selected':'')+'>Monitor</option><option value="alert"'+(k.status==='alert'?' selected':'')+'>Action</option></select></div></div>';
+  }).join('');
+}
+
+function renderConduct(){
+  document.getElementById('conduct-editor-list').innerHTML=ADMIN_DATA.conduct.map(function(c,i){
+    return'<div class="editor-row" style="grid-template-columns:30px 1fr 2fr auto"><div style="font-size:18px;font-weight:700;color:var(--ti);text-align:center;padding-top:8px">'+c.num+'</div><div class="field"><div class="field-label">Rule</div><input type="text" value="'+esc(c.rule)+'" onchange="ADMIN_DATA.conduct['+i+'].rule=this.value"></div><div class="field"><div class="field-label">Description</div><input type="text" value="'+esc(c.detail)+'" onchange="ADMIN_DATA.conduct['+i+'].detail=this.value"></div><button class="btn-sm btn-danger" style="margin-top:20px" onclick="delConduct('+i+')">✕</button></div>';
+  }).join('');
+}
+function addConduct(){var n=ADMIN_DATA.conduct.length+1;ADMIN_DATA.conduct.push({num:String(n),rule:'New rule',detail:'Description.'});renderConduct();}
+function delConduct(i){ADMIN_DATA.conduct.splice(i,1);ADMIN_DATA.conduct.forEach(function(c,j){c.num=String(j+1);});renderConduct();}
+
+function renderCarriers(){
+  document.getElementById('carrier-editor-list').innerHTML=ADMIN_DATA.carriers.map(function(c,i){
+    return'<div class="editor-block"><div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end"><div class="field"><div class="field-label">Carrier</div><input type="text" value="'+esc(c.name)+'" onchange="ADMIN_DATA.carriers['+i+'].name=this.value"></div><div class="field"><div class="field-label">Region</div><input type="text" value="'+esc(c.region)+'" onchange="ADMIN_DATA.carriers['+i+'].region=this.value"></div><div class="field"><div class="field-label">Contact</div><input type="text" value="'+esc(c.contact)+'" onchange="ADMIN_DATA.carriers['+i+'].contact=this.value"></div><div class="field"><div class="field-label">Min Wait</div><input type="text" value="'+esc(c.minWait)+'" onchange="ADMIN_DATA.carriers['+i+'].minWait=this.value"></div><button class="btn-sm btn-danger" onclick="delCarrier('+i+')">✕</button></div><div class="field" style="margin-top:6px"><div class="field-label">Notes</div><input type="text" value="'+esc(c.notes)+'" onchange="ADMIN_DATA.carriers['+i+'].notes=this.value"></div></div>';
+  }).join('');
+}
+function addCarrier(){ADMIN_DATA.carriers.push({name:'New Carrier',region:'',contact:'',method:'',minWait:'',notes:''});renderCarriers();}
+function delCarrier(i){if(confirm('Remove?')){ADMIN_DATA.carriers.splice(i,1);renderCarriers();}}
+
+function saveSection(section){
+  var ind=document.getElementById('save-'+section);
+  ind.style.display='inline-block'; ind.textContent='Saving...'; ind.className='save-indicator';
+  DATA_STORE[section] = ADMIN_DATA[section];
+  scheduleSave();
+  setTimeout(function(){
+    ind.textContent = FILE_HANDLE ? '✓ Saved to file' : '✓ Saved (connect file to persist)';
+    ind.className='save-indicator save-ok';
+  },400);
+  setTimeout(function(){ind.style.display='none';},4000);
+}
+
+// ═══════════════════════════════════════════════════
+// DECISION ENGINE ADMIN
+// ═══════════════════════════════════════════════════
+function renderDE(){
+  var de=ADMIN_DATA.decision_engine; if(!de) return;
+  document.getElementById('de-mkt-list').innerHTML=de.marketplaces.map(function(m,i){
+    return '<div class="editor-row" style="grid-template-columns:1fr auto;margin-bottom:4px"><input type="text" value="'+esc(m)+'" onchange="ADMIN_DATA.decision_engine.marketplaces['+i+']=this.value"><button class="btn-sm btn-danger" onclick="delDEMkt('+i+')">✕</button></div>';
+  }).join('');
+  document.getElementById('de-inq-list').innerHTML=de.inquiry_types.map(function(t,i){
+    return '<div class="editor-row" style="grid-template-columns:1fr auto;margin-bottom:4px"><input type="text" value="'+esc(t)+'" onchange="ADMIN_DATA.decision_engine.inquiry_types['+i+']=this.value"><button class="btn-sm btn-danger" onclick="delDEInq('+i+')">✕</button></div>';
+  }).join('');
+  document.getElementById('de-sub-list').innerHTML=de.inquiry_types.map(function(t,i){
+    var s=de.sub[t]||{};
+    return '<div class="editor-block" style="margin-bottom:6px">'+
+      '<div style="font-size:11px;font-weight:700;color:var(--ti);margin-bottom:6px">'+esc(t)+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+      '<div class="field" style="grid-column:1/-1"><div class="field-label">Direct Resolve Key (overrides question if set)</div>'+
+        '<input type="text" value="'+esc(s.resolve||'')+'" onchange="deSub('+i+',\'resolve\',this.value)"></div>'+
+      '<div class="field" style="grid-column:1/-1"><div class="field-label">Clarifying Question</div>'+
+        '<input type="text" value="'+esc(s.q||'')+'" onchange="deSub('+i+',\'q\',this.value)"></div>'+
+      '<div class="field"><div class="field-label">Yes → Resolution Key</div>'+
+        '<input type="text" value="'+esc(s.y||'')+'" onchange="deSub('+i+',\'y\',this.value)"></div>'+
+      '<div class="field"><div class="field-label">Yes Label</div>'+
+        '<input type="text" value="'+esc(s.yL||'')+'" onchange="deSub('+i+',\'yL\',this.value)"></div>'+
+      '<div class="field"><div class="field-label">No → Resolution Key</div>'+
+        '<input type="text" value="'+esc(s.n||'')+'" onchange="deSub('+i+',\'n\',this.value)"></div>'+
+      '<div class="field"><div class="field-label">No Label</div>'+
+        '<input type="text" value="'+esc(s.nL||'')+'" onchange="deSub('+i+',\'nL\',this.value)"></div>'+
+      '</div></div>';
+  }).join('');
+  var resKeys=Object.keys(de.res);
+  document.getElementById('de-res-list').innerHTML=resKeys.map(function(k){
+    var r=de.res[k];
+    var stepsStr=Array.isArray(r.steps)?r.steps.join('\n'):r.steps||'';
+    var tmplStr=Array.isArray(r.templates)?r.templates.join(', '):r.templates||'';
+    return '<div class="editor-block" style="margin-bottom:8px">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+        '<span class="pill pill-blue" style="font-family:monospace">'+esc(k)+'</span>'+
+        '<input type="text" value="'+esc(r.title)+'" onchange="ADMIN_DATA.decision_engine.res[\''+k+'\'].title=this.value" style="flex:1;font-weight:700">'+
+        '<button class="btn-sm btn-danger" onclick="delDERes(\''+k+'\')">Remove</button>'+
+      '</div>'+
+      '<div class="field"><div class="field-label">Steps (one per line)</div>'+
+        '<textarea rows="5" onchange="deResSteps(\''+k+'\',this.value)">'+esc(stepsStr)+'</textarea></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">'+
+        '<div class="field"><div class="field-label">Templates (comma-separated)</div>'+
+          '<input type="text" value="'+esc(tmplStr)+'" onchange="deResTmpl(\''+k+'\',this.value)"></div>'+
+        '<div class="field"><div class="field-label">Escalate if</div>'+
+          '<input type="text" value="'+esc(r.escalate||'')+'" onchange="ADMIN_DATA.decision_engine.res[\''+k+'\'].escalate=this.value"></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function addDEMkt(){ADMIN_DATA.decision_engine.marketplaces.push('New Marketplace');renderDE();}
+function delDEMkt(i){ADMIN_DATA.decision_engine.marketplaces.splice(i,1);renderDE();}
+function addDEInq(){var n='New Inquiry Type';ADMIN_DATA.decision_engine.inquiry_types.push(n);ADMIN_DATA.decision_engine.sub[n]={resolve:''};renderDE();}
+function delDEInq(i){var n=ADMIN_DATA.decision_engine.inquiry_types[i];ADMIN_DATA.decision_engine.inquiry_types.splice(i,1);delete ADMIN_DATA.decision_engine.sub[n];renderDE();}
+function deSub(i,field,val){var k=ADMIN_DATA.decision_engine.inquiry_types[i];ADMIN_DATA.decision_engine.sub[k]=ADMIN_DATA.decision_engine.sub[k]||{};ADMIN_DATA.decision_engine.sub[k][field]=val;}
+function deResSteps(k,val){ADMIN_DATA.decision_engine.res[k].steps=val.split('\n').filter(function(s){return s.trim();});}
+function deResTmpl(k,val){ADMIN_DATA.decision_engine.res[k].templates=val.split(',').map(function(s){return s.trim();}).filter(Boolean);}
+function addDERes(){var k='res-'+Date.now();ADMIN_DATA.decision_engine.res[k]={title:'New Resolution',steps:['Step 1.'],templates:[],escalate:''};renderDE();}
+function delDERes(k){if(confirm('Remove resolution "'+k+'"?')){delete ADMIN_DATA.decision_engine.res[k];renderDE();}}
+function saveDE(){
+  var de=ADMIN_DATA.decision_engine;
+  var newSub={};de.inquiry_types.forEach(function(t){newSub[t]=de.sub[t]||{};});
+  de.sub=newSub; ADMIN_DATA.decision_engine.sub=newSub;
+  WIZ_MKTS=de.marketplaces.slice();
+  WIZ_INQS=de.inquiry_types.slice();
+  SUB=JSON.parse(JSON.stringify(de.sub));
+  RES=JSON.parse(JSON.stringify(de.res));
+  DATA_STORE.decision_engine=de;
+  scheduleSave();
+  renderDE();
+  var ind=document.getElementById('save-de');
+  ind.style.display='inline-block';ind.textContent='Saving...';ind.className='save-indicator';
+  setTimeout(function(){ind.textContent=FILE_HANDLE?'✓ Saved to file':'✓ Saved (connect file to persist)';ind.className='save-indicator save-ok';},400);
+  setTimeout(function(){ind.style.display='none';},4000);
+}
+
+// ═══════════════════════════════════════════════════
+// TICKET LOG (persistent)
+// ═══════════════════════════════════════════════════
+var ticketLog = DATA_STORE.ticket_log || [];
+function logTicketResolution(marketplace, inquiryType, sopKey, resolution) {
+  var entry = {
+    id: 'TKT-' + String(ticketLog.length+1).padStart(4,'0'),
+    date: new Date().toISOString(),
+    marketplace: marketplace,
+    inquiryType: inquiryType,
+    sopKey: sopKey,
+    resolution: resolution,
+    agent: 'Current user'
+  };
+  ticketLog.push(entry);
+  DATA_STORE.ticket_log = ticketLog;
+  scheduleSave();
+  return entry;
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+resetWizard();
+buildPol('all');
+buildTmpl();
+loadAISettings();
+updateStorageUI('memory');
+</script>
+
+</body>
+</html>

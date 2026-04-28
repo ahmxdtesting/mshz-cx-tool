@@ -1,0 +1,458 @@
+{
+  "_meta": {
+    "version": "3.0",
+    "created": "2026-04-14T17:13:10.723Z",
+    "lastSaved": "2026-04-22T17:29:03.522Z"
+  },
+  "admin_pin": "1234",
+  "shifts": [],
+  "ticket_log": [],
+  "ai_settings": {
+    "key": "",
+    "model": "gpt-4o-mini",
+    "system_prompt": "You are an expert customer service advisor for MSHZ International, an e-commerce company selling on Amazon USA, Amazon CA, eBay, Shopify, and Walmart.\n\nYour role: Given a customer inquiry situation and the company's policies, provide a clear, actionable recommendation to the CS agent. Be specific — reference exact SOP numbers, template codes, and escalation rules.\n\nRules:\n- Always prioritize Amazon account health (ODR below 1%, response within 24h, returns within 48h)\n- Reference specific policy rules (R-1 through R-8) when relevant\n- Mention exact template codes (A2, B3, B7, etc.) the agent should use\n- Flag escalation triggers clearly\n- Be concise but thorough — agents are busy\n- If the situation is ambiguous, recommend the safer/more customer-friendly option",
+    "policy_context": "MSHZ INTERNATIONAL — CUSTOMER SERVICE POLICY CONTEXT\n\nREFUND RULES:\nR-1: Return request response within 48 HOURS. A-Z without 48h response = Amazon auto-grants.\nR-2: Message response within 24h, 7 days/week including weekends.\nR-3: Wrong/damaged by MSHZ = full refund, zero deductions.\nR-4: Customer-fault return = deduct return shipping from refund.\nR-5: Issue refund after return received unless returnless.\nR-6: Returnless refund = issue immediately, customer keeps item.\nR-7: Do NOT resend a completely different item.\nR-8: Refund within 2 business days of receiving return.\n\nACCOUNT HEALTH THRESHOLDS:\n- ODR: Below 1% (target 0.5%). Includes negative feedback, A-Z claims, chargebacks.\n- Message response rate: Above 95% within 24h, 7 days/week.\n- Return request response: 100% within 48h. A-Z without 48h = auto-grant.\n- Buyer contact rate: Target below 1.63%. Currently 2.14%.\n- Buyer dissatisfaction rate: Target below 6.47%. Currently 14.29%.\n\nESCALATION RULES:\n- Listing inaccuracy: resolve customer, submit listing report same day.\n- Refund > $40: escalate before processing.\n- FBA wrong item: STOP, escalate IMMEDIATELY before acting.\n- A-Z claim filed: notify supervisor within 1 hour, respond within 48h.\n- Technical/Xtenzi: assign to Harleen, never answer independently.\n\nCARRIER CONTACTS:\n- USPS (USA): usps.com/help/claims.htm — min 7 days wait\n- UPS (USA/CA): 1-800-742-5877 — min 5 business days\n- Canada Post (CA): 1-866-607-6301 — min 5 business days\n- Stallion Express (CA): stallionexpress.ca/support — min 3 business days\n- FedEx (USA): 1-800-463-3339 — min 5 business days\n\nCONDUCT RULES:\n1. Track all conversations in eDesk. Document every action.\n2. Read entire thread before replying.\n3. Every reply must move the ticket forward.\n4. Personalize every interaction.\n5. Response time: 24h or less, 7 days/week.\n6. Don't take hostile customers personally. Escalate if needed.\n7. Underpromise, overdeliver.\n8. Customer is always right — resolve, don't debate.\n9. Document every action before closing."
+  },
+  "sops": [
+    {
+      "id": "SOP-001",
+      "title": "Cancellation — item NOT yet shipped",
+      "trigger": "Customer requests cancel before label printed",
+      "steps": "1. Check SellerCloud, Shipstation and Stallion Express — confirm the order is not processed and no tracking number  generated.\n2. Park order immediately.\n3. Notify shipping team, that there is a cancellation request (Only if the order has a tracking number generated)\n4. Cancel: Sellercloud→ ShipStation/Stallion → Marketplace.\n5. Email buyer confirming cancellation.",
+      "templates": "Cancellation confirmation",
+      "escalate": "Tracking Number Generated and/or Label already printed — consult shipping team."
+    },
+    {
+      "id": "SOP-003",
+      "title": "Damaged item — complete/major",
+      "trigger": "Item arrived completely damaged or leaking",
+      "steps": "1. Send A2. Ask: What damaged? Entire or part? Box also damaged?\n2. Box AND product damaged → carrier fault → claim AND resolve.\n3. Product only, box intact → packing issue → resolve, no claim.\n4. Assess return value.\n5. Resend: Linnworks, ship within 1 BD, send B7.",
+      "templates": "A2, B7",
+      "escalate": "High-value item or resolution beyond your authority."
+    },
+    {
+      "id": "SOP-006",
+      "title": "Wrong item sent by MSHZ",
+      "trigger": "Customer received different item, wrong size/color/qty",
+      "steps": "1. Ask: What did you receive? Confirm exactly.\n2. Seller error confirmed. Investigate. Notify supervisor.\n3. FBA: Do NOT direct to Amazon. Escalate BEFORE acting.\n4. Offer resend or full refund.\n5. Resend: Linnworks, 1 BD, send B7.\n6. Return: prepaid label — MSHZ pays.",
+      "templates": "B7",
+      "escalate": "FBA wrong item — escalate IMMEDIATELY."
+    },
+    {
+      "id": "SOP-009",
+      "title": "Delivered — customer not received",
+      "trigger": "Tracking shows delivered, customer says not received",
+      "steps": "1. Confirm 4 points: address? household? post office? neighbor?\n2. Send B3 — notify delivery, ask 4 points.\n3. Open carrier search SAME DAY.\n4. Notify: investigating, allow 2 BD.\n5. After 2 BD: located → ETA. Not located → resend or refund.",
+      "templates": "B3, B3-3, B3-4",
+      "escalate": "High-value — supervisor approval before resend or refund."
+    },
+    {
+      "id": "SOP-016",
+      "title": "Listing inaccuracy reported",
+      "trigger": "Customer says description, photo, or specs are wrong",
+      "steps": "1. Resolve customer issue first.\n2. Do NOT close without Step 3.\n3. Submit listing report: marketplace+ASIN, quote, what listing shows, order ID.\n4. Add eDesk note: Listing report submitted [date].\n5. Close ONLY after report submitted.",
+      "templates": "Resolution template + internal note",
+      "escalate": "Listings team does not action within 48h."
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Response time — all messages",
+      "target": "Under 24h, 7 days/week",
+      "current": "3.09h avg",
+      "status": "good"
+    },
+    {
+      "metric": "Return request response",
+      "target": "Within 48h — zero exceptions",
+      "current": "Critical policy",
+      "status": "alert"
+    },
+    {
+      "metric": "Order Defect Rate (ODR)",
+      "target": "Below 1% (target 0.5%)",
+      "current": "Below 1% — monitor",
+      "status": "alert"
+    },
+    {
+      "metric": "Buyer contact rate",
+      "target": "Below 1.63%",
+      "current": "Currently 2.14%",
+      "status": "warn"
+    },
+    {
+      "metric": "Buyer dissatisfaction rate",
+      "target": "Below 6.47%",
+      "current": "Currently 14.29%",
+      "status": "alert"
+    },
+    {
+      "metric": "365-day positive rate",
+      "target": "Above 90%",
+      "current": "Currently 80%",
+      "status": "warn"
+    },
+    {
+      "metric": "QA score (monthly)",
+      "target": "75/100 to pass",
+      "current": "Team avg: 82",
+      "status": "good"
+    }
+  ],
+  "conduct": [
+    {
+      "num": "1",
+      "rule": "Get organized",
+      "detail": "Track all conversations in eDesk. Document every action before closing."
+    },
+    {
+      "num": "2",
+      "rule": "Read the entire thread first",
+      "detail": "Before replying, read every message."
+    },
+    {
+      "num": "3",
+      "rule": "Every reply must move the ticket forward",
+      "detail": "Each message is one step toward resolution."
+    },
+    {
+      "num": "4",
+      "rule": "Personalize every interaction",
+      "detail": "Use customer name, reference their specific order."
+    },
+    {
+      "num": "5",
+      "rule": "Response time: 24h or less — 7 days a week",
+      "detail": "Includes weekends and holidays. Non-negotiable."
+    },
+    {
+      "num": "6",
+      "rule": "Do not take hostile customers personally",
+      "detail": "Stay professional. Escalate to team lead if needed."
+    },
+    {
+      "num": "7",
+      "rule": "Underpromise, overdeliver",
+      "detail": "Never give delivery estimate without confirming with warehouse."
+    },
+    {
+      "num": "8",
+      "rule": "Customer is always right",
+      "detail": "Work toward resolution even if factually incorrect."
+    },
+    {
+      "num": "9",
+      "rule": "Document every action before closing",
+      "detail": "Clear note on every ticket — what was done and why."
+    }
+  ],
+  "carriers": [
+    {
+      "name": "USPS",
+      "region": "USA",
+      "contact": "usps.com/help/claims.htm",
+      "method": "Online",
+      "minWait": "7 days after mailing",
+      "notes": "Minimum 7 days — do not file earlier."
+    },
+    {
+      "name": "UPS",
+      "region": "USA & CA",
+      "contact": "1-800-742-5877",
+      "method": "Phone",
+      "minWait": "5 business days",
+      "notes": "Phone only for investigations."
+    },
+    {
+      "name": "Canada Post",
+      "region": "CA",
+      "contact": "1-866-607-6301",
+      "method": "Phone",
+      "minWait": "5 business days",
+      "notes": "Canadian domestic shipments."
+    },
+    {
+      "name": "Stallion Express",
+      "region": "CA",
+      "contact": "stallionexpress.ca/support",
+      "method": "Portal",
+      "minWait": "3 business days",
+      "notes": "Canadian fulfillment hub."
+    },
+    {
+      "name": "ChitChats",
+      "region": "CA",
+      "contact": "chitchats.com",
+      "method": "Portal",
+      "minWait": "3 business days",
+      "notes": "Lightweight Canadian parcels."
+    },
+    {
+      "name": "FedEx",
+      "region": "USA",
+      "contact": "1-800-463-3339",
+      "method": "Phone",
+      "minWait": "5 business days",
+      "notes": ""
+    }
+  ],
+  "decision_engine": {
+    "marketplaces": [
+      "Amazon USA",
+      "Amazon CA",
+      "eBay USA",
+      "eBay CA",
+      "Shopify (Claire Burke/AzanClk/myBitti/Xtenzi)",
+      "Walmart ",
+      "Bonanza"
+    ],
+    "inquiry_types": [
+      "Cancellation request",
+      "Damaged / defective item",
+      "Wrong item sent",
+      "Item not received",
+      "Delayed parcel",
+      "Listing inaccuracy",
+      "Technical / compatibility",
+      "Address change",
+      "Discount / promotion"
+    ],
+    "sub": {
+      "Cancellation request": {
+        "q": "Has the item already shipped?",
+        "y": "cancel-shipped",
+        "n": "cancel-not-shipped",
+        "yL": "Yes — already shipped",
+        "nL": "No — not yet shipped"
+      },
+      "Damaged / defective item": {
+        "q": "How severe is the damage?",
+        "y": "damaged-major",
+        "n": "damaged-minor",
+        "yL": "Complete/major damage",
+        "nL": "Minor/partial (scratch, chip, one piece)"
+      },
+      "Wrong item sent": {
+        "q": "Is this an FBA order?",
+        "y": "wrong-item",
+        "n": "wrong-item",
+        "yL": "Yes — FBA",
+        "nL": "No — seller fulfilled"
+      },
+      "Item not received": {
+        "q": "Has the delivery date passed?",
+        "y": "not-received-after",
+        "n": "not-received-before",
+        "yL": "Yes — past delivery date",
+        "nL": "No — still before date"
+      },
+      "Delayed parcel": {
+        "resolve": "delayed"
+      },
+      "Listing inaccuracy": {
+        "resolve": "listing"
+      },
+      "Technical / compatibility": {
+        "resolve": "technical"
+      },
+      "Address change": {
+        "q": "Has the item already shipped?",
+        "y": "address-shipped",
+        "n": "address-not-shipped",
+        "yL": "Yes — already shipped",
+        "nL": "No — not yet shipped"
+      },
+      "Discount / promotion": {
+        "resolve": "discount"
+      }
+    },
+    "res": {
+      "cancel-not-shipped": {
+        "title": "SOP-001 — Cancel: not yet shipped",
+        "steps": [
+          "Check Linnworks Open Orders — confirm no label printed.",
+          "Park order in Linnworks immediately.",
+          "Notify shipping team before cancelling.",
+          "Cancel: Linnworks → ShipStation → Marketplace.",
+          "Email buyer confirming cancellation and full refund."
+        ],
+        "templates": [
+          "Cancellation confirmation"
+        ],
+        "escalate": "Shipping label already printed — consult shipping team first."
+      },
+      "cancel-shipped": {
+        "title": "SOP-002 — Cancel: already shipped",
+        "steps": [
+          "Confirm order in Processed Orders tab.",
+          "Notify customer: already shipped — cannot cancel.",
+          "Advise return after delivery for refund.",
+          "Refund on receipt minus return shipping (customer fault)."
+        ],
+        "templates": [
+          "B11-B"
+        ],
+        "escalate": "Customer hostile — escalate to team lead."
+      },
+      "damaged-major": {
+        "title": "SOP-003 — Major damaged item",
+        "steps": [
+          "Send A2. Ask: What damaged? Entire or part? Box also damaged?",
+          "Box AND product damaged → carrier fault → claim AND offer resolution.",
+          "Product only damaged, box intact → packing issue → offer resolution.",
+          "Assess return value. Destroyed = no return.",
+          "Resend: Linnworks, ship within 1 BD, send B7.",
+          "⚠ Kitchen/Luggage/Electronics → flag to supervisor. 3–5× refund rates."
+        ],
+        "templates": [
+          "A2",
+          "B7"
+        ],
+        "escalate": "High-value item or resolution beyond your authority."
+      },
+      "damaged-minor": {
+        "title": "SOP-004 — Minor damaged item",
+        "steps": [
+          "Send A2 to confirm damage extent.",
+          "Minor cosmetic: offer 10% discount first.",
+          "Higher discount requested: consult supervisor — do not commit.",
+          "Return insisted: issue return label, full refund.",
+          "Set damaged: offer to resend that piece only.",
+          "Open carrier claim if outer box also damaged."
+        ],
+        "templates": [
+          "A2",
+          "A3"
+        ],
+        "escalate": "Customer requests above 10% — supervisor approval first."
+      },
+      "wrong-item": {
+        "title": "SOP-006 — Wrong item sent",
+        "steps": [
+          "Ask: \"What did you receive?\" Confirm exactly.",
+          "Seller error confirmed. Investigate: wrong pick or Linnworks SKU error? Notify supervisor.",
+          "⚠ FBA: Do NOT direct to Amazon. Escalate BEFORE acting.",
+          "Offer resend or full refund per preference.",
+          "Resend: Linnworks, ship within 1 BD, send B7.",
+          "Return: prepaid label — MSHZ pays all costs."
+        ],
+        "templates": [
+          "B7"
+        ],
+        "escalate": "FBA wrong item — escalate IMMEDIATELY before contacting customer."
+      },
+      "not-received-before": {
+        "title": "SOP-008 — In transit, before delivery date",
+        "steps": [
+          "Check tracking — confirm in transit and on track.",
+          "Send B2 with tracking and expected delivery date.",
+          "If delivered already: switch to SOP-009."
+        ],
+        "templates": [
+          "B2"
+        ],
+        "escalate": "No tracking movement 7+ days — open carrier investigation."
+      },
+      "not-received-after": {
+        "title": "SOP-009 — Delivered, not received",
+        "steps": [
+          "Confirm 4 points: address correct? household received? post office holding? neighbor received?",
+          "Send B3 — notify delivery confirmation, ask 4 points.",
+          "Open carrier search SAME DAY — do not wait.",
+          "Notify: \"Investigating — allow 2 business days.\"",
+          "After 2 BD: located → new ETA. Not located → resend or refund."
+        ],
+        "templates": [
+          "B3",
+          "B3-3",
+          "B3-4"
+        ],
+        "escalate": "High-value item — supervisor approval before resend or refund."
+      },
+      "delayed": {
+        "title": "SOP-011 — Delayed parcel",
+        "steps": [
+          "Assure customer: delay is with carrier, not MSHZ.",
+          "Open carrier investigation: UPS 1-800-742-5877 / USPS online / Canada Post 1-866-607-6301.",
+          "Send B3-2. \"Follow up within 2 business days.\"",
+          "Expedited paid + past date: offer shipping refund.",
+          "Located → new ETA. Not located → resend or refund."
+        ],
+        "templates": [
+          "B3-2"
+        ],
+        "escalate": "Carrier cannot locate after 5 BD — escalate."
+      },
+      "listing": {
+        "title": "SOP-016 ★ — Listing inaccuracy",
+        "steps": [
+          "Resolve customer issue first.",
+          "Do NOT close without completing Step 3.",
+          "Submit listing report to listings team: marketplace+ASIN, customer quote, what listing shows, order ID.",
+          "Add internal eDesk note: \"Listing report submitted [date].\"",
+          "Close ONLY after report submitted."
+        ],
+        "templates": [
+          "Resolution template + internal note"
+        ],
+        "escalate": "Listings team does not action within 48h — escalate."
+      },
+      "technical": {
+        "title": "SOP-015 — Technical/compatibility",
+        "steps": [
+          "Ask for: (a) exact item, (b) vehicle year/make/model or device model number.",
+          "Check listing page for compatible models.",
+          "No info or unsure: use T2 (model known) or T4 (unknown).",
+          "⚠ ALL wire harness: use D3, assign to Harleen. Never guess."
+        ],
+        "templates": [
+          "T2",
+          "T4",
+          "D3"
+        ],
+        "escalate": "Always assign wire harness to Harleen — never independently."
+      },
+      "discount": {
+        "title": "SOP-014 — WELCOME15 discount",
+        "steps": [
+          "Determine why not received: wrong email, not subscribed, or spam.",
+          "Wrong email: confirm, provide WELCOME15 manually.",
+          "Not subscribed: ask to subscribe or offer to do it with consent.",
+          "Spam: ask to check. Not found: provide code.",
+          "Order not placed: provide WELCOME15 directly.",
+          "Order placed + confirmed subscriber: 15% partial refund."
+        ],
+        "templates": [
+          "Welcome/discount email"
+        ],
+        "escalate": "No escalation — agent handles independently."
+      },
+      "address-not-shipped": {
+        "title": "SOP-012 — Address change, not shipped",
+        "steps": [
+          "Park order in Linnworks immediately.",
+          "MINOR (unit, spelling, PO Box): can accommodate.",
+          "MAJOR (postal code, house number, street): cannot change. Offer cancellation.",
+          "Amazon: policy prevents changes. Offer cancellation.",
+          "⚠ CRITICAL: No changes on flagged/fraudulent Shopify orders."
+        ],
+        "templates": [
+          "B11-A"
+        ],
+        "escalate": "Fraudulent Shopify order — escalate immediately, do not ship."
+      },
+      "address-shipped": {
+        "title": "SOP-013 — Address change, already shipped",
+        "steps": [
+          "Notify: address changes not possible after dispatch.",
+          "Customer contacts carrier directly with tracking number to request redirect.",
+          "Use B11-B."
+        ],
+        "templates": [
+          "B11-B"
+        ],
+        "escalate": "No escalation — informational only."
+      }
+    }
+  }
+}
