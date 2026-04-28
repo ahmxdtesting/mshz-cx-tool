@@ -275,6 +275,27 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
 .ss-zone-hint{font-size:9px;color:var(--t3);margin-top:3px}
 .ss-preview{margin-top:10px}
 .ss-preview img{max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--bd)}
+/* AI Slide Panel */
+.ai-panel{position:fixed;right:-450px;top:0;width:420px;height:100vh;background:var(--card);border-left:1px solid var(--bd2);box-shadow:-6px 0 30px rgba(0,0,0,.1);display:flex;flex-direction:column;z-index:1000;transition:right .3s cubic-bezier(.4,0,.2,1)}
+.ai-panel.open{right:0}
+.ai-panel-header{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(135deg,#f0f4ff,#e8f0fe)}
+.ai-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.1);backdrop-filter:blur(1px)}
+.ai-overlay.show{display:block}
+.ai-fab{position:fixed;bottom:28px;right:28px;width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(26,115,232,.45);z-index:998;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;font-weight:700}
+.ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(26,115,232,.55)}
+/* Chat response formatting */
+.resp-h{font-size:10px;font-weight:700;color:var(--ti);text-transform:uppercase;letter-spacing:.07em;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px solid #d2e3fc}
+.resp-step{display:flex;gap:8px;margin-bottom:5px;align-items:flex-start;font-size:11px}
+.resp-num{background:var(--bi);color:var(--ti);font-size:8px;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.resp-warn{background:var(--bw);border:1px solid #fdd663;color:var(--tw);padding:6px 10px;border-radius:6px;font-size:10px;margin:4px 0}
+.resp-esc{background:var(--be);border:1px solid #f5c6cb;color:var(--te);padding:6px 10px;border-radius:6px;font-size:10px;margin:4px 0;font-weight:600}
+.resp-sop{background:var(--bi);color:var(--ti);padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;font-family:monospace}
+.resp-tmpl{background:var(--bo);color:var(--to);padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;font-family:monospace}
+.resp-q{background:linear-gradient(135deg,#f0f4ff,#e8f0fe);border:1px solid #a8c7fa;border-radius:8px;padding:10px 12px;margin-top:8px}
+.resp-q-label{font-size:9px;font-weight:700;color:var(--ti);margin-bottom:5px}
+.resp-q-item{font-size:11px;color:var(--t1);margin-bottom:3px;line-height:1.5}
+.chat-bubble.assistant{font-size:11px;line-height:1.7}
+.chat-bubble code{background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace}
 /* Responsive */
 @media(max-width:900px){
   #sidebar{width:180px;min-width:180px}
@@ -311,7 +332,7 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
     <svg viewBox="0 0 16 16"><polyline points="2,12 5,7 8,9 11,4 14,6"/></svg>Agent KPIs
   </div>
   <div class="sb-section" style="margin-top:6px">Management</div>
-  <div class="sb-item" onclick="nav('chat',this)">
+  <div class="sb-item" onclick="toggleAIPanel()">
     <svg viewBox="0 0 16 16"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H9l-3 2v-2H3a1 1 0 01-1-1V3z"/></svg>AI Chat
     <span class="sb-badge" style="background:var(--bi);color:var(--ti)">NEW</span>
   </div>
@@ -560,37 +581,6 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
     </div>
   </div>
 
-  <!-- PAGE: AI CHAT -->
-  <div class="page" id="p-chat">
-    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:500px">
-      <div class="card-header">
-        <span class="card-title">AI Chat — Ask anything about a customer situation</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span style="font-size:9px;color:var(--t3)">Gemini Flash · Policy-aware</span>
-          <button class="btn-sm" onclick="clearChat()">Clear</button>
-        </div>
-      </div>
-      <div class="chat-wrap">
-        <div class="chat-messages" id="chat-messages">
-          <div class="chat-bubble assistant">👋 Hi! I'm your AI assistant. Ask me anything about a customer situation, paste a screenshot, or describe an issue — I'll recommend the right SOP, templates, and next steps based on MSHZ policies.</div>
-        </div>
-        <div class="chat-footer">
-          <div id="chat-img-wrap" style="display:none">
-            <div class="chat-img-preview">
-              <img id="chat-img-thumb" src="">
-              <button class="remove-img" onclick="removeChatImg()">✕</button>
-            </div>
-          </div>
-          <div class="chat-input-row">
-            <textarea id="chat-input" class="chat-textarea" placeholder="Type a question or paste a screenshot (⌘V)…" rows="2" style="flex:1;resize:none" onkeydown="chatKeydown(event)"></textarea>
-            <button class="btn-primary" onclick="sendChat()" style="height:fit-content;padding:10px 16px">Send</button>
-          </div>
-          <div style="font-size:9px;color:var(--t3)">⌘V to paste screenshot · Enter to send · Shift+Enter for new line</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- PAGE: AI SETTINGS -->
   <div class="page" id="p-ai">
     <div class="card">
@@ -614,17 +604,37 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
         </div>
         <div class="field">
           <div class="field-label">System Prompt — AI Instructions</div>
-          <textarea id="ai-system-prompt" rows="8" style="min-height:160px">You are an expert customer service advisor for MSHZ International, an e-commerce company selling on Amazon USA, Amazon CA, eBay, Shopify, and Walmart.
+          <textarea id="ai-system-prompt" rows="8" style="min-height:160px">You are an AI customer service advisor for MSHZ International, an e-commerce company selling on Amazon USA, Amazon CA, eBay, Shopify, and Walmart.
 
-Your role: Given a customer inquiry situation and the company's policies, provide a clear, actionable recommendation to the CS agent. Be specific — reference exact SOP numbers, template codes, and escalation rules.
+CONVERSATION APPROACH:
+- When an agent first describes a situation, ask 1-2 short clarifying questions before giving your full recommendation. Do NOT give the complete answer on the first message.
+- As the conversation develops, maintain full context from every prior message and reference it naturally.
+- Once you have enough information, provide a structured recommendation using the format below.
+- Keep responses concise — agents are handling live customers.
 
-Rules:
-- Always prioritize Amazon account health (ODR below 1%, response within 24h, returns within 48h)
-- Reference specific policy rules (R-1 through R-8) when relevant
-- Mention exact template codes (A2, B3, B7, etc.) the agent should use
-- Flag escalation triggers clearly
-- Be concise but thorough — agents are busy
-- If the situation is ambiguous, recommend the safer/more customer-friendly option</textarea>
+FORMATTING RULES:
+- Use ## for section headers (## Situation, ## SOP, ## Steps, ## Template, ## Escalate if)
+- Use numbered lists for action steps: 1. 2. 3.
+- Use **bold** for key terms
+- Start any escalation warning line with ⚠
+- Reference SOPs as: SOP-001, SOP-003, SOP-009 etc.
+- Reference templates by exact code only: A2, B3, B7, B11-A etc.
+
+FINAL RECOMMENDATION FORMAT:
+## Situation
+One sentence summary of the issue.
+
+## SOP
+Which SOP applies and why.
+
+## Steps
+1. First action
+2. Second action
+
+## Template
+Which code to send and exactly when.
+
+⚠ Escalate if: specific trigger condition</textarea>
         </div>
         <div class="field">
           <div class="field-label">Policy Context — Sent to AI with Every Request</div>
@@ -754,6 +764,41 @@ CONDUCT RULES:
 </div><!-- /main -->
 </div><!-- /app -->
 
+<!-- AI SLIDE PANEL -->
+<div id="ai-overlay" class="ai-overlay" onclick="toggleAIPanel()"></div>
+<div id="ai-panel" class="ai-panel">
+  <div class="ai-panel-header">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:7px">
+        <span style="font-size:16px">✦</span> AI Assistant
+        <span class="pill pill-blue" style="font-size:8px">Gemini Flash</span>
+      </div>
+      <div style="font-size:9px;color:var(--t2);margin-top:2px">Policy-aware · Asks clarifying questions</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn-sm" onclick="clearChat()" style="font-size:9px;padding:4px 9px">Clear</button>
+      <button onclick="toggleAIPanel()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--t3);padding:2px 6px;line-height:1">×</button>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-bubble assistant">👋 Describe the customer situation and I'll ask a couple of quick questions before recommending the right SOP, steps, and template. You can also paste a screenshot directly.</div>
+  </div>
+  <div class="chat-footer">
+    <div id="chat-img-wrap" style="display:none;margin-bottom:8px">
+      <div class="chat-img-preview">
+        <img id="chat-img-thumb" src="" style="max-height:70px;border-radius:6px;border:1px solid var(--bd)">
+        <button class="remove-img" onclick="removeChatImg()">✕</button>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="Describe the situation or paste a screenshot (⌘V)…" rows="2" style="flex:1;resize:none" onkeydown="chatKeydown(event)"></textarea>
+      <button class="btn-primary" onclick="sendChat()" style="padding:10px 14px;align-self:flex-end">Send</button>
+    </div>
+    <div style="font-size:9px;color:var(--t3);margin-top:5px">⌘V to paste image · Enter to send · Shift+Enter for new line</div>
+  </div>
+</div>
+<button class="ai-fab" onclick="toggleAIPanel()" title="Open AI Assistant">✦</button>
+
 <script>
 // ═══════════════════════════════════════════════════
 // NAVIGATION
@@ -765,7 +810,7 @@ function nav(id, el) {
   if (!pg) return;
   pg.classList.add('active');
   if (el && el.classList) el.classList.add('active');
-  var T = { decision:'Decision Engine', policy:'Policy Dashboard', templates:'Template Library', shifts:'Shift Schedule', kpi:'Agent KPI Dashboard', chat:'AI Chat', ai:'AI Settings', admin:'Admin Panel' };
+  var T = { decision:'Decision Engine', policy:'Policy Dashboard', templates:'Template Library', shifts:'Shift Schedule', kpi:'Agent KPI Dashboard', ai:'AI Settings', admin:'Admin Panel' };
   document.getElementById('topbar-title').textContent = T[id] || id;
 }
 
@@ -1894,6 +1939,99 @@ async function analyzeScreenshot(e) {
 }
 
 // ═══════════════════════════════════════════════════
+// AI PANEL TOGGLE
+// ═══════════════════════════════════════════════════
+function toggleAIPanel() {
+  var panel = document.getElementById('ai-panel');
+  var overlay = document.getElementById('ai-overlay');
+  var isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  overlay.classList.toggle('show', !isOpen);
+}
+
+// ═══════════════════════════════════════════════════
+// AI RESPONSE FORMATTER
+// Converts plain AI text into colour-coded, readable HTML
+// ═══════════════════════════════════════════════════
+var TMPL_CODES = ['A2','A3','B2','B3','B3-2','B3-3','B3-4','B7','B11-A','B11-B','C8','D3','D6','T2','T4'];
+
+function formatAIResponse(text) {
+  var lines = text.split('\n');
+  var out = [];
+  var inSteps = false;
+
+  lines.forEach(function(line) {
+    var t = line.trim();
+    if (!t) { out.push('<br>'); return; }
+
+    // Section headers ## or **Header:**
+    if (/^##\s+/.test(t)) {
+      out.push('<div class="resp-h">' + esc(t.replace(/^##\s+/,'')) + '</div>');
+      return;
+    }
+    if (/^\*\*[^*]+\*\*:?\s*$/.test(t)) {
+      out.push('<div class="resp-h">' + esc(t.replace(/\*\*/g,'').replace(/:$/,'')) + '</div>');
+      return;
+    }
+
+    // Escalation lines
+    if (/^[⚠🚨]|escalat/i.test(t)) {
+      out.push('<div class="resp-esc">🚨 ' + formatInline(t.replace(/^[⚠🚨]\s*/,'')) + '</div>');
+      return;
+    }
+
+    // Warning lines
+    if (/^(note|warning|caution|important):/i.test(t)) {
+      out.push('<div class="resp-warn">⚠ ' + formatInline(t) + '</div>');
+      return;
+    }
+
+    // Numbered steps
+    var stepMatch = t.match(/^(\d+)\.\s+(.+)$/);
+    if (stepMatch) {
+      out.push('<div class="resp-step"><div class="resp-num">' + stepMatch[1] + '</div><div>' + formatInline(stepMatch[2]) + '</div></div>');
+      return;
+    }
+
+    // Bullet points
+    if (/^[-•*]\s+/.test(t)) {
+      out.push('<div style="padding-left:10px;margin-bottom:3px;font-size:11px">· ' + formatInline(t.replace(/^[-•*]\s+/,'')) + '</div>');
+      return;
+    }
+
+    // Questions block — lines ending with ?
+    if (/\?$/.test(t) && t.length < 200) {
+      out.push('<div class="resp-q-item">❓ ' + formatInline(t) + '</div>');
+      return;
+    }
+
+    // Default paragraph
+    out.push('<div style="margin-bottom:3px;font-size:11px;line-height:1.7">' + formatInline(t) + '</div>');
+  });
+
+  // Wrap consecutive question items in a styled box
+  var html = out.join('');
+  html = html.replace(/((?:<div class="resp-q-item">.*?<\/div>)+)/g, '<div class="resp-q"><div class="resp-q-label">❓ Clarifying questions</div>$1</div>');
+
+  return html;
+}
+
+function formatInline(text) {
+  // Bold
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // SOP badges
+  text = text.replace(/\bSOP-(\d+\w*)\b/g, '<span class="resp-sop">SOP-$1</span>');
+  // Template badges — exact codes only
+  TMPL_CODES.forEach(function(c) {
+    var re = new RegExp('\\b(' + c.replace('-','\\-') + ')\\b', 'g');
+    text = text.replace(re, '<span class="resp-tmpl">$1</span>');
+  });
+  // Inline code
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  return text;
+}
+
+// ═══════════════════════════════════════════════════
 // AI CHAT
 // ═══════════════════════════════════════════════════
 var CHAT_HISTORY = [];
@@ -1902,7 +2040,7 @@ var chatImageData = null;
 function clearChat() {
   CHAT_HISTORY = [];
   chatImageData = null;
-  document.getElementById('chat-messages').innerHTML = '<div class="chat-bubble assistant">👋 Hi! Ask me anything about a customer situation, paste a screenshot, or describe an issue — I\'ll recommend the right SOP, templates, and next steps.</div>';
+  document.getElementById('chat-messages').innerHTML = '<div class="chat-bubble assistant">👋 Describe the customer situation and I\'ll ask a couple of quick questions before recommending the right SOP, steps, and template. You can also paste a screenshot directly.</div>';
   document.getElementById('chat-img-wrap').style.display = 'none';
   document.getElementById('chat-img-thumb').src = '';
 }
@@ -1944,11 +2082,17 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function appendBubble(role, html) {
+function appendBubble(role, content, rawHtml) {
   var wrap = document.getElementById('chat-messages');
   var div = document.createElement('div');
   div.className = 'chat-bubble ' + role;
-  div.innerHTML = html;
+  if (rawHtml) {
+    div.innerHTML = content;
+  } else if (role === 'assistant') {
+    div.innerHTML = formatAIResponse(content);
+  } else {
+    div.innerHTML = esc(content).replace(/\n/g,'<br>');
+  }
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
   return div;
@@ -1967,16 +2111,16 @@ async function sendChat() {
       { type: 'text', text: msg || 'Please analyze this screenshot and advise.' },
       { type: 'image_url', image_url: { url: chatImageData } }
     ];
-    appendBubble('user', esc(displayMsg) + '<br><img src="'+chatImageData+'" style="max-width:180px;border-radius:6px;margin-top:6px">');
+    appendBubble('user', esc(displayMsg) + '<br><img src="'+chatImageData+'" style="max-width:180px;border-radius:6px;margin-top:6px;border:1px solid rgba(255,255,255,.3)">', true);
   } else {
     userContent = msg;
-    appendBubble('user', esc(msg).replace(/\n/g,'<br>'));
+    appendBubble('user', msg);
   }
 
   removeChatImg();
   CHAT_HISTORY.push({ role: 'user', content: userContent });
 
-  var loadingBubble = appendBubble('loading', '<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
+  var loadingBubble = appendBubble('loading', '<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:6px;font-size:10px;color:var(--t3)">Thinking...</span></div>', true);
 
   var systemPrompt = document.getElementById('ai-system-prompt').value;
 
@@ -1985,19 +2129,19 @@ async function sendChat() {
   ].concat(CHAT_HISTORY);
 
   try {
-    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800, model: getActiveModel() }) });
+    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 900, model: getActiveModel() }) });
     var d = await r.json();
     loadingBubble.remove();
     if (d.error) {
-      appendBubble('assistant', '⚠ Error: ' + esc(d.error));
+      appendBubble('assistant', '⚠ Error: ' + d.error);
     } else if (d.choices && d.choices[0]) {
       var reply = d.choices[0].message.content;
       CHAT_HISTORY.push({ role: 'assistant', content: reply });
-      appendBubble('assistant', reply.replace(/\n/g,'<br>'));
+      appendBubble('assistant', reply);
     }
   } catch(err) {
     loadingBubble.remove();
-    appendBubble('assistant', '⚠ Network error: ' + esc(err.message));
+    appendBubble('assistant', '⚠ Network error: ' + err.message);
   }
 }
 
