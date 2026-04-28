@@ -2098,6 +2098,55 @@ function appendBubble(role, content, rawHtml) {
   return div;
 }
 
+async function fetchOrderData(orderId) {
+  try {
+    var r = await fetch('/api/amazon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: orderId })
+    });
+    var d = await r.json();
+    if (!r.ok || d.error) return { error: d.error || 'Unknown error' };
+    return d;
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+function formatOrderContext(orderId, data) {
+  if (data.error) return '\n\n[Amazon Order ' + orderId + ' lookup failed: ' + data.error + ']';
+  var o = data.order;
+  var items = data.items || [];
+  var lines = [
+    '\n\n=== LIVE AMAZON ORDER DATA ===',
+    'Order ID: ' + (o.AmazonOrderId || orderId),
+    'Status: ' + (o.OrderStatus || 'Unknown'),
+    'Purchase Date: ' + (o.PurchaseDate || 'N/A'),
+    'Marketplace: ' + (o.MarketplaceId || 'N/A'),
+    'Fulfillment: ' + (o.FulfillmentChannel || 'N/A'),
+    'Ship Service: ' + (o.ShipServiceLevel || 'N/A'),
+  ];
+  if (o.BuyerInfo) {
+    lines.push('Buyer Email: ' + (o.BuyerInfo.BuyerEmail || 'N/A'));
+    lines.push('Buyer Name: ' + (o.BuyerInfo.BuyerName || 'N/A'));
+  }
+  if (o.ShippingAddress) {
+    var a = o.ShippingAddress;
+    lines.push('Ship To: ' + [a.Name, a.AddressLine1, a.City, a.StateOrRegion, a.PostalCode, a.CountryCode].filter(Boolean).join(', '));
+  }
+  if (o.OrderTotal) lines.push('Order Total: ' + o.OrderTotal.CurrencyCode + ' ' + o.OrderTotal.Amount);
+  if (o.LatestDeliveryDate) lines.push('Latest Delivery: ' + o.LatestDeliveryDate);
+  if (o.EarliestDeliveryDate) lines.push('Earliest Delivery: ' + o.EarliestDeliveryDate);
+  if (items.length) {
+    lines.push('Items:');
+    items.forEach(function(item) {
+      lines.push('  - ' + (item.Title || item.ASIN || 'Item') + ' x' + (item.QuantityOrdered || 1) + ' @ ' + (item.ItemPrice ? item.ItemPrice.CurrencyCode + ' ' + item.ItemPrice.Amount : 'N/A'));
+    });
+  }
+  lines.push('=== END ORDER DATA ===');
+  return lines.join('\n');
+}
+
 async function sendChat() {
   var input = document.getElementById('chat-input');
   var msg = input.value.trim();
@@ -2122,10 +2171,22 @@ async function sendChat() {
 
   var loadingBubble = appendBubble('loading', '<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:6px;font-size:10px;color:var(--t3)">Thinking...</span></div>', true);
 
+  // Auto-detect Amazon order IDs and fetch live data
+  var orderIds = (msg.match(/\b\d{3}-\d{7}-\d{7}\b/g) || []).filter(function(v,i,a){return a.indexOf(v)===i;});
+  var orderContext = '';
+  if (orderIds.length) {
+    loadingBubble.querySelector('span') && (loadingBubble.querySelector('span').textContent = 'Fetching order data...');
+    for (var oi = 0; oi < orderIds.length; oi++) {
+      var odata = await fetchOrderData(orderIds[oi]);
+      orderContext += formatOrderContext(orderIds[oi], odata);
+    }
+  }
+
   var systemPrompt = document.getElementById('ai-system-prompt').value;
+  var baseContext = buildAIContext(msg) + orderContext;
 
   var messages = [
-    { role: 'system', content: systemPrompt + '\n\n' + buildAIContext(msg) }
+    { role: 'system', content: systemPrompt + '\n\n' + baseContext }
   ].concat(CHAT_HISTORY);
 
   try {
