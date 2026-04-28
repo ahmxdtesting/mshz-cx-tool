@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         'X-Title': 'MSHZ CX Tool'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
+        model: 'google/gemini-flash-1.5',
         messages: messages,
         max_tokens: max_tokens || 800
       })
@@ -30,7 +30,8 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || 'OpenRouter error' });
+      const errMsg = data.error?.message || data.error || JSON.stringify(data);
+      return res.status(response.status).json({ error: errMsg });
     }
 
     return res.status(200).json(data);
