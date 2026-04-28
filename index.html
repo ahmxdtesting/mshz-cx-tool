@@ -600,12 +600,17 @@ textarea{resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;l
         <div id="ai-key-status" style="font-size:10px;min-height:16px"></div>
         <input type="hidden" id="ai-api-key" value="">
         <div class="field">
-          <div class="field-label">AI Model</div>
-          <select id="ai-model">
-            <option value="google/gemini-2.0-flash-001" selected>Gemini Flash 2.0 (active)</option>
-            <option value="google/gemini-flash-1.5">Gemini Flash 1.5</option>
-            <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
-          </select>
+          <div class="field-label">AI Model — Active</div>
+          <div style="display:flex;gap:8px">
+            <select id="ai-model" style="flex:1" onchange="setActiveModel(this.value)"></select>
+            <button class="btn-sm btn-danger" onclick="removeModel()" style="white-space:nowrap">Remove</button>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <input type="text" id="new-model-id" placeholder="Paste OpenRouter model ID — e.g. google/gemini-2.0-flash-exp" style="flex:1;font-size:11px">
+            <button class="btn-primary btn-sm" onclick="addModel()" style="white-space:nowrap">Add &amp; Save</button>
+          </div>
+          <div style="font-size:9px;color:var(--t3);margin-top:4px">Find model IDs at openrouter.ai/models — copy exactly as shown</div>
+          <div id="model-add-msg" style="font-size:10px;min-height:14px;margin-top:4px"></div>
         </div>
         <div class="field">
           <div class="field-label">System Prompt — AI Instructions</div>
@@ -1285,13 +1290,75 @@ function saveAISettings(){
   setTimeout(function(){document.getElementById('ai-save-status').innerHTML='';},4000);
 }
 
+var DEFAULT_MODELS = [
+  'google/gemini-2.0-flash-exp',
+  'google/gemini-flash-1.5',
+  'anthropic/claude-3.5-haiku',
+  'openai/gpt-4o-mini'
+];
+
+function getActiveModel() {
+  return (DATA_STORE.ai_settings && DATA_STORE.ai_settings.model) || DEFAULT_MODELS[0];
+}
+
+function buildModelDropdown() {
+  var sel = document.getElementById('ai-model');
+  if (!sel) return;
+  var saved = (DATA_STORE.ai_settings && DATA_STORE.ai_settings.models) || [];
+  var list = saved.length ? saved : DEFAULT_MODELS.slice();
+  var active = getActiveModel();
+  sel.innerHTML = list.map(function(m) {
+    return '<option value="'+esc(m)+'"'+(m===active?' selected':'')+'>'+esc(m)+'</option>';
+  }).join('');
+}
+
+function setActiveModel(val) {
+  if (!DATA_STORE.ai_settings) DATA_STORE.ai_settings = {};
+  DATA_STORE.ai_settings.model = val;
+  scheduleSave();
+}
+
+function addModel() {
+  var input = document.getElementById('new-model-id');
+  var val = input.value.trim();
+  var msg = document.getElementById('model-add-msg');
+  if (!val) { msg.innerHTML='<span style="color:var(--red)">Please enter a model ID.</span>'; return; }
+  if (!DATA_STORE.ai_settings) DATA_STORE.ai_settings = {};
+  if (!DATA_STORE.ai_settings.models) DATA_STORE.ai_settings.models = DEFAULT_MODELS.slice();
+  if (DATA_STORE.ai_settings.models.includes(val)) {
+    msg.innerHTML='<span style="color:var(--tw)">Already in list — selecting it.</span>';
+  } else {
+    DATA_STORE.ai_settings.models.push(val);
+    msg.innerHTML='<span style="color:var(--green)">✓ Added: '+esc(val)+'</span>';
+  }
+  DATA_STORE.ai_settings.model = val;
+  scheduleSave();
+  buildModelDropdown();
+  input.value = '';
+  setTimeout(function(){ msg.innerHTML=''; }, 3000);
+}
+
+function removeModel() {
+  var sel = document.getElementById('ai-model');
+  var val = sel.value;
+  if (!DATA_STORE.ai_settings || !DATA_STORE.ai_settings.models) return;
+  if (DATA_STORE.ai_settings.models.length <= 1) {
+    document.getElementById('model-add-msg').innerHTML='<span style="color:var(--red)">Must keep at least one model.</span>';
+    return;
+  }
+  DATA_STORE.ai_settings.models = DATA_STORE.ai_settings.models.filter(function(m){ return m !== val; });
+  DATA_STORE.ai_settings.model = DATA_STORE.ai_settings.models[0];
+  scheduleSave();
+  buildModelDropdown();
+}
+
 function loadAISettings(){
   if(DATA_STORE.ai_settings){
     if(DATA_STORE.ai_settings.key) document.getElementById('ai-api-key').value=DATA_STORE.ai_settings.key;
-    if(DATA_STORE.ai_settings.model) document.getElementById('ai-model').value=DATA_STORE.ai_settings.model;
     if(DATA_STORE.ai_settings.system_prompt) document.getElementById('ai-system-prompt').value=DATA_STORE.ai_settings.system_prompt;
     if(DATA_STORE.ai_settings.policy_context) document.getElementById('ai-policy-context').value=DATA_STORE.ai_settings.policy_context;
   }
+  buildModelDropdown();
 }
 
 async function getAISuggestion(key, resolution){
@@ -1315,7 +1382,7 @@ async function getAISuggestion(key, resolution){
   ];
 
   try {
-    var r = await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages,max_tokens:600})});
+    var r = await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages,max_tokens:600,model:getActiveModel()})});
     var d = await r.json();
     if(d.error){
       el.innerHTML='<div style="font-size:11px;color:var(--te)">AI Error: '+d.error+'</div>';
@@ -1814,7 +1881,7 @@ async function analyzeScreenshot(e) {
   ];
 
   try {
-    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800 }) });
+    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800, model: getActiveModel() }) });
     var d = await r.json();
     if (d.error) {
       analysisEl.innerHTML = '<div class="alert-red">Error: ' + d.error + '</div>';
@@ -1918,7 +1985,7 @@ async function sendChat() {
   ].concat(CHAT_HISTORY);
 
   try {
-    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800 }) });
+    var r = await fetch('/api/ai', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages: messages, max_tokens: 800, model: getActiveModel() }) });
     var d = await r.json();
     loadingBubble.remove();
     if (d.error) {
